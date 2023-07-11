@@ -56,7 +56,7 @@ def run_speed_test(city_name):
 
 def process_data(data):
     df = pd.DataFrame(data)
-    numeric_fields = ['upload_speed', 'download_speed', 'latency']
+    numeric_fields = ['download_speed', 'upload_speed', 'latency']
     df[numeric_fields] = df[numeric_fields].apply(
         pd.to_numeric, errors='coerce')
     return df.dropna(subset=numeric_fields)
@@ -64,7 +64,7 @@ def process_data(data):
 
 def draw_plot(df):
     df_melt = df.melt(id_vars='city', value_vars=[
-                      'latency', 'download_speed', 'upload_speed'])
+                      'download_speed', 'upload_speed', 'latency'])
 
     sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(figsize=(12, 8))
