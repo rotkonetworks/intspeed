@@ -56,7 +56,7 @@ def run_speed_test(city_name):
 
 def process_data(data):
     df = pd.DataFrame(data)
-    numeric_fields = ['latency', 'upload_speed', 'download_speed']
+    numeric_fields = ['upload_speed', 'download_speed', 'latency']
     df[numeric_fields] = df[numeric_fields].apply(
         pd.to_numeric, errors='coerce')
     return df.dropna(subset=numeric_fields)
