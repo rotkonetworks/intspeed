@@ -21,7 +21,7 @@ def run_speed_test(city_name):
     try:
         print(f"\nStarting speed test for {city_name.strip()}...")
         speedtest_output = subprocess.check_output(
-            f"speedtest-go -m -t 4 --city='{city_name.strip()}'", shell=True).decode('utf-8')
+            f"speedtest-go -m -t 8 --city='{city_name.strip()}'", shell=True).decode('utf-8')
 
         download_speed = re.search(
             r'Download: ([\d\.]+)Mbps', speedtest_output)
