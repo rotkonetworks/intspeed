@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from operator import itemgetter
 
-VERSION = "1.1.1"
+VERSION = "1.1.2"
 RETRY_COUNT = 2
 DEFAULT_THREADS = 8
 
