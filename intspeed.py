@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from operator import itemgetter
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 RETRY_COUNT = 2
 DEFAULT_THREADS = 8
 
@@ -28,32 +28,34 @@ def run_speed_test(city_name, threads, multiserver, retries=3):
             speedtest_output = subprocess.check_output(
                 f"speedtest-go {multiserver_flag} -t {threads} --city='{city_name.strip()}'", shell=True).decode('utf-8')
 
-            download_speed = re.search(
-                r'Download: ([\d\.]+)Mbps', speedtest_output)
-            upload_speed = re.search(
-                r'Upload: ([\d\.]+)Mbps', speedtest_output)
-            latency = re.search(r'Latency: ([\d\.]+)ms', speedtest_output)
+            download_speed = re.search(r'Download: ([\d\.]+)Mbps', speedtest_output)
+            upload_speed = re.search(r'Upload: ([\d\.]+)Mbps', speedtest_output)
+            latency = re.search(r'Latency: ([\d\.]+)(ms|us)', speedtest_output)
 
-            if download_speed and upload_speed and latency:
-                print(f"Speed test results for {city_name.strip()}:")
-                print(f"  Download Speed: {download_speed.group(1)} Mbps")
-                print(f"  Upload Speed: {upload_speed.group(1)} Mbps")
-                print(f"  Latency: {latency.group(1)} ms")
-                return {
-                    'city': city_name.strip(),
-                    'download_speed': round(float(download_speed.group(1))),
-                    'upload_speed': round(float(upload_speed.group(1))),
-                    'latency': round(float(latency.group(1))),
-                }
-            else:
+            if not download_speed or not upload_speed or not latency:
                 print(f"Attempt failed for {city_name.strip()}, retrying...")
                 continue
-        except subprocess.CalledProcessError as e:
-            print(
-                f"Attempt failed for {city_name.strip()} with error: {str(e)}, retrying...")
 
-    print(
-        f"Speed test failed for {city_name.strip()} after {retries} attempts.")
+            print(f"Speed test results for {city_name.strip()}:")
+            print(f"  Download Speed: {download_speed.group(1)} Mbps")
+            print(f"  Upload Speed: {upload_speed.group(1)} Mbps")
+            print(f"  Latency: {latency.group(1)} {latency.group(2)}")
+
+            # Handle latency in microseconds (us) and convert it to milliseconds (ms)
+            latency_value = float(latency.group(1))
+            if latency.group(2) == "us":
+                latency_value = latency_value / 1000  # Convert microseconds to milliseconds
+
+            return {
+                'city': city_name.strip(),
+                'download_speed': round(float(download_speed.group(1))),
+                'upload_speed': round(float(upload_speed.group(1))),
+                'latency': round(latency_value, 3),  # round latency to 3 decimal places
+            }
+        except subprocess.CalledProcessError as e:
+            print(f"Attempt failed for {city_name.strip()} with error: {str(e)}, retrying...")
+            
+    print(f"Speed test failed for {city_name.strip()} after {retries} attempts.")
     return {
         'city': city_name.strip(),
         'error': 'Speed test failed after multiple attempts'
@@ -110,17 +112,20 @@ def cli():
 
 
 @click.command()
-@click.option('--threads', default=DEFAULT_THREADS, help='Number of threads to use for speedtest.')
-@click.option('--multiserver', default=False, is_flag=True, help='Use multi-server mode for speedtest.')
+@click.option('-t', '--threads', default=DEFAULT_THREADS, help='Number of threads to use for speedtest.')
+@click.option('-m', '--multiserver', is_flag=True, default=False, help='Use multi-server mode for speedtest.')
 def test(threads, multiserver):
     """Run the speed test."""
     city_list = fetch_city_list()
     results = [run_speed_test(city_name, threads, multiserver)
-        for city_code, city_name in city_list]
+               for city_code, city_name in city_list]
+    # Filter out failed results before sorting
+    successful_results = [
+        result for result in results if 'error' not in result]
     # sorting results based on latency
-    results = sorted(results, key=itemgetter('latency'))
+    successful_results = sorted(successful_results, key=itemgetter('latency'))
     with open('results.json', 'w') as f:
-        json.dump(results, f)
+        json.dump(successful_results, f)
 
 
 @click.command()
