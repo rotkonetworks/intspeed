@@ -21,18 +21,23 @@ def run_speed_test(city_name):
     try:
         print(f"\nStarting speed test for {city_name.strip()}...")
         speedtest_output = subprocess.check_output(
-            f"speedtest-go --city='{city_name.strip()}'", shell=True).decode('utf-8')
+            f"speedtest-go -m -t 4 --city='{city_name.strip()}'", shell=True).decode('utf-8')
 
         download_speed = re.search(
             r'Download: ([\d\.]+)Mbps', speedtest_output)
         upload_speed = re.search(r'Upload: ([\d\.]+)Mbps', speedtest_output)
-        latency = re.search(r'Latency: ([\d\.]+)ms', speedtest_output)
+        latency = re.search(r'Latency: ([\d\.]+)(µs|ms)', speedtest_output)
 
         if download_speed and upload_speed and latency:
             print(f"Speed test results for {city_name.strip()}:")
             print(f"  Download Speed: {download_speed.group(1)} Mbps")
             print(f"  Upload Speed: {upload_speed.group(1)} Mbps")
-            print(f"  Latency: {latency.group(1)} ms")
+            # Check the unit and convert if necessary
+            latency_value = float(latency.group(1))
+            latency_unit = latency.group(2)
+            if latency_unit == 'µs':
+                latency_value /= 1000  # convert to ms
+            print(f"  Latency: {latency_value} ms")
             return {
                 'city': city_name.strip(),
                 'download_speed': float(download_speed.group(1)),
