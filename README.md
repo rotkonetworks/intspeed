@@ -1,6 +1,6 @@
 # International Speedtest CLI
 
-![Speedtest plot](./speedtest_example.png)
+![Speedtest plot](./speedtest.png)
 The International Speedtest CLI is a command-line tool that allows you to run
 speed tests for various cities around the world and visualize the results in a
 graph.
