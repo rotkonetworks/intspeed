@@ -73,7 +73,7 @@ This project is licensed under the [MIT License](LICENSE).
 ## Acknowledgements
 
 The International Speedtest CLI utilizes the
-[speedtest-go](https://github.com/zeromq/goczmq) tool for performing the speed
+[speedtest-go](https://github.com/showwin/speedtest-go) tool for performing the speed
 tests.
 
 ## Contact
