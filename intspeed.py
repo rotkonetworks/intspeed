@@ -2,153 +2,137 @@
 
 import click
 import subprocess
-import re
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from operator import itemgetter
+from pathlib import Path
 
-VERSION = "1.1.3"
-RETRY_COUNT = 2
-DEFAULT_THREADS = 8
+# Globals
+VERSION = "1.2.0"
+DEFAULT_THREADS = 1
+RAW_DATA_DIR = Path('raw_data')
+RAW_DATA_DIR.mkdir(exist_ok=True)
 
-
-def fetch_city_list():
-    output = subprocess.check_output(
-        "speedtest-go --city-list", shell=True).decode('utf-8')
-    return re.findall(r'\((\w\w)\)\s+([\w\s]+)', output)
-
-
-def run_speed_test(city_name, threads, multiserver, retries=3):
-    for _ in range(retries):
-        try:
-            print(f"\nStarting speed test for {city_name.strip()}...")
-            multiserver_flag = "-m" if multiserver else ""
-            speedtest_output = subprocess.check_output(
-                f"speedtest-go {multiserver_flag} -t {threads} --city='{city_name.strip()}'", shell=True).decode('utf-8')
-
-            download_speed = re.search(r'Download: ([\d\.]+)Mbps', speedtest_output)
-            upload_speed = re.search(r'Upload: ([\d\.]+)Mbps', speedtest_output)
-            latency = re.search(r'Latency: ([\d\.]+)(ms|us)', speedtest_output)
-
-            if not download_speed or not upload_speed or not latency:
-                print(f"Attempt failed for {city_name.strip()}, retrying...")
-                continue
-
-            print(f"Speed test results for {city_name.strip()}:")
-            print(f"  Download Speed: {download_speed.group(1)} Mbps")
-            print(f"  Upload Speed: {upload_speed.group(1)} Mbps")
-            print(f"  Latency: {latency.group(1)} {latency.group(2)}")
-
-            # Handle latency in microseconds (us) and convert it to milliseconds (ms)
-            latency_value = float(latency.group(1))
-            if latency.group(2) == "us":
-                latency_value = latency_value / 1000  # Convert microseconds to milliseconds
-
-            return {
-                'city': city_name.strip(),
-                'download_speed': round(float(download_speed.group(1))),
-                'upload_speed': round(float(upload_speed.group(1))),
-                'latency': round(latency_value, 3),  # round latency to 3 decimal places
-            }
-        except subprocess.CalledProcessError as e:
-            print(f"Attempt failed for {city_name.strip()} with error: {str(e)}, retrying...")
-            
-    print(f"Speed test failed for {city_name.strip()} after {retries} attempts.")
-    return {
-        'city': city_name.strip(),
-        'error': 'Speed test failed after multiple attempts'
-    }
-
-
-def process_data(data):
-    df = pd.DataFrame(data)
-    numeric_fields = ['download_speed', 'upload_speed', 'latency']
-    df[numeric_fields] = df[numeric_fields].apply(
-        pd.to_numeric, errors='coerce')
-    return df.dropna(subset=numeric_fields).sort_values('latency')
-
-
-def draw_plot(df, subtitle):
-    image_name = re.sub(r'\W+', '_', subtitle.lower()) + \
-        ".png" if subtitle else 'speedtest.png'
-    df_melt = df.melt(id_vars='city', value_vars=[
-        'download_speed', 'upload_speed'])
-
-    sns.set_theme(style="whitegrid")
-    fig, ax = plt.subplots(figsize=(12, 8))
-
-    plt.title('International Speedtest by Rotko Networks',
-              fontsize=24, fontweight='bold', y=1.05)
-
-    if subtitle:
-        plt.figtext(0.5, 0.01, subtitle, wrap=True,
-                    horizontalalignment='center', fontsize=12)
-
-    barplot = sns.barplot(x='city', y='value', hue='variable',
-                          data=df_melt, ax=ax, palette='viridis')
-
-    ax.set_xlabel('City', fontsize=16)
-    ax.set_ylabel('Speed (Mbps)', fontsize=16)
-    ax.legend(title='Metric', title_fontsize='13', fontsize='12')
-
-    for p in barplot.patches:
-        barplot.annotate(format(p.get_height(), '.0f'),
-                         (p.get_x() + p.get_width() / 2., p.get_height()),
-                         ha='center', va='center',
-                         size=10,
-                         xytext=(0, -12),
-                         textcoords='offset points')
-
-    plt.xticks(rotation=90)
-    plt.tight_layout()
-    plt.savefig(image_name, bbox_inches='tight')
-
-
+# Define the CLI group here
 @click.group()
 def cli():
+    """A CLI tool for running and visualizing speed tests."""
     pass
 
+def fetch_city_list():
+    """Fetches the list of cities supported by speedtest-go."""
+    try:
+        output = subprocess.check_output(["./speedtest-go", "--city-list"], text=True)
+        cities = {}
+        for line in output.splitlines():
+            if line.startswith('('):
+                parts = line.split('\t')
+                if len(parts) >= 2:
+                    code, name = parts[0].strip(), parts[1].strip()
+                    cities[name.lower()] = code[1:-1]
+        return cities
+    except subprocess.CalledProcessError as e:
+        click.echo(f"Error fetching city list: {e}")
+        return {}
 
-@click.command()
-@click.option('-t', '--threads', default=DEFAULT_THREADS, help='Number of threads to use for speedtest.')
-@click.option('-m', '--multiserver', is_flag=True, default=False, help='Use multi-server mode for speedtest.')
-def test(threads, multiserver):
-    """Run the speed test."""
-    city_list = fetch_city_list()
-    results = [run_speed_test(city_name, threads, multiserver)
-               for city_code, city_name in city_list]
-    # Filter out failed results before sorting
-    successful_results = [
-        result for result in results if 'error' not in result]
-    # sorting results based on latency
-    successful_results = sorted(successful_results, key=itemgetter('latency'))
-    with open('results.json', 'w') as f:
-        json.dump(successful_results, f)
+def run_speed_test(city_name):
+    """Runs a speed test for the given city with 1 thread and saves the raw JSON data."""
+    try:
+        output = subprocess.check_output(["./speedtest-go", "--city", city_name, "--thread", "1", "--json"], text=True)
+        data = json.loads(output)
+        file_path = RAW_DATA_DIR / f"{city_name.replace(' ', '_')}.json"
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=2)
+        click.echo(f"Test for {city_name} completed and saved.")
+    except subprocess.CalledProcessError as e:
+        click.echo(f"Speed test failed for {city_name} with error: {e}")
+
+def process_raw_data():
+    data = []
+    for file in RAW_DATA_DIR.glob('*.json'):
+        with open(file, 'r') as f:
+            result = json.load(f)
+            city = result.get('servers', [{}])[0].get('name', 'Unknown')
+            dl_speed_mbps = result.get('servers', [{}])[0].get('dl_speed', 0)
+            ul_speed_mbps = result.get('servers', [{}])[0].get('ul_speed', 0)
+            latency_ms = result.get('servers', [{}])[0].get('latency', 0) / 1e6
+            data.append({'City': city, 'Download Speed (Mbps)': dl_speed_mbps, 'Upload Speed (Mbps)': ul_speed_mbps, 'Latency (ms)': latency_ms})
+    return pd.DataFrame(data)
 
 
-@click.command()
-@click.option('--subtitle', default=None, help='Optional subtitle for the plot.')
-def draw(subtitle):
-    """Draw the results graph from results.json file."""
-    with open('results.json', 'r') as f:
-        results = json.load(f)
-    df = process_data(results)
-    draw_plot(df, subtitle)
+def draw_grouped_bars_with_line(df):
+    # Sort DataFrame by Latency in ascending order for a logical plot order
+    df_sorted = df.sort_values(by='Latency (ms)', ascending=True).reset_index()
+
+    # Set up the matplotlib figure and axes
+    fig, ax1 = plt.subplots(figsize=(12, 8))
+
+    # Create an array with the position of each bar along the x-axis
+    bar_width = 0.35  # Width of the bars
+    r1 = range(len(df_sorted))
+    r2 = [x + bar_width for x in r1]
+
+    # Plot the bars for Download and Upload speeds
+    ax1.bar(r1, df_sorted['Download Speed (Mbps)'], color='skyblue', width=bar_width, edgecolor='white', label='Download Speed')
+    ax1.bar(r2, df_sorted['Upload Speed (Mbps)'], color='orange', width=bar_width, edgecolor='white', label='Upload Speed')
+
+    # Set the labels, title, and custom x-axis tick labels
+    ax1.set_xlabel('City', fontweight='bold')
+    ax1.set_ylabel('Speed (Mbps)', fontweight='bold')
+    ax1.set_title('Internet Speed Test Results by City')
+    ax1.set_xticks([r + bar_width/2 for r in range(len(df_sorted))])
+    ax1.set_xticklabels(df_sorted['City'], rotation=45, ha='right')
+
+    # Create secondary Y-axis for latency
+    ax2 = ax1.twinx()
+    ax2.plot(df_sorted['City'], df_sorted['Latency (ms)'], color='green', marker='o', label='Latency (ms)')
+    ax2.set_ylabel('Latency (ms)', fontweight='bold')
+
+    # Adding legend for clarity
+    ax1.legend(loc='upper left')
+    ax2.legend(loc='upper right')
+
+    # Annotate bars with the numerical data
+    for idx, val in enumerate(df_sorted['Download Speed (Mbps)']):
+        ax1.text(idx - bar_width/2, val, f'{val:.2f}', ha='center', va='bottom')
+    for idx, val in enumerate(df_sorted['Upload Speed (Mbps)']):
+        ax1.text(idx + bar_width/2, val, f'{val:.2f}', ha='center', va='bottom')
+
+    # Annotate line plot (latency) with numerical data
+    for i, point in df_sorted.iterrows():
+        ax2.text(i, point['Latency (ms)'], f"{point['Latency (ms)']:.2f}", ha='center', va='bottom')
+
+    plt.tight_layout()
+    plt.savefig(RAW_DATA_DIR / 'speedtest_results_grouped_bar_with_latency.png')
+    plt.show()
+
+# Replace the existing plot() function in the CLI with this one
+@cli.command()
+def plot():
+    """Generates a plot from raw data."""
+    df = process_raw_data()
+    if df.empty:
+        click.echo("No data available to plot. Please run the tests first.")
+    else:
+        draw_grouped_bars_with_line(df)
 
 
-@click.command()
-def version():
-    """Check the version."""
-    click.echo(f"International Speedtest CLI, version {VERSION}")
-    click.echo(f"from Rotko Networks OU, https://rotko.net")
+@cli.command()
+def plot():
+    """Generates a plot from raw data."""
+    df = process_raw_data()
+    if df.empty:
+        click.echo("No data available to plot. Please run the tests first.")
+    else:
+        draw_grouped_bars_with_line(df)
 
-
-cli.add_command(test)
-cli.add_command(draw)
-cli.add_command(version)
-
+@cli.command()
+def test():
+    """Runs speed tests for all available cities."""
+    cities = fetch_city_list()
+    for city in cities.keys():
+        run_speed_test(city)
 
 if __name__ == "__main__":
     cli()
