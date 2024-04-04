@@ -1,0 +1,86 @@
+name: Build and Publish Binary
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build binary with PyInstaller
+        run: |
+          pyinstaller --onefile --clean src/intspeed.py
+
+      - name: Generate SHA512 hash
+        run: |
+          cd dist
+          sha512sum intspeed > intspeed.sha512
+
+      - name: Import GPG Key
+        run: |
+          echo "${{ secrets.HQ_ROTKO_PGP }}" | gpg --batch --import
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Configure GPG
+        run: |
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          gpg-connect-agent reloadagent /bye
+
+      - name: Sign binary and hash
+        run: |
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output dist/intspeed.sig dist/intspeed
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output dist/intspeed.sha512.sig dist/intspeed.sha512
+
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: intspeed-and-signatures
+          path: |
+            dist/intspeed
+            dist/intspeed.sig
+            dist/intspeed.sha512
+            dist/intspeed.sha512.sig
+
+      - name: Bump version and tag
+        id: bump_version
+        uses: anothrNick/github-tag-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          WITH_V: false
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        with:
+          files: |
+            dist/intspeed
+            dist/intspeed.sig
+            dist/intspeed.sha512
+            dist/intspeed.sha512.sig
+          tag_name: ${{ steps.bump_version.outputs.new_tag }}
