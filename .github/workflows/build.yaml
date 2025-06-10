@@ -19,25 +19,26 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          python-version: '3.9'
-          cache: 'pip'
+          go-version: '1.21'
 
-      - name: Install dependencies
+      - name: Build binaries
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller
+          # Build CLI binary
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o intspeed ./cmd/cli
+          
+          # Build server binary
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o intspeed-server ./cmd/server
+          
+          # Make binaries executable
+          chmod +x intspeed intspeed-server
 
-      - name: Build binary with PyInstaller
+      - name: Generate SHA512 hashes
         run: |
-          pyinstaller --onefile --clean intspeed.py
-
-      - name: Generate SHA512 hash
-        run: |
-          cd dist
           sha512sum intspeed > intspeed.sha512
+          sha512sum intspeed-server > intspeed-server.sha512
 
       - name: Import GPG Key
         run: |
@@ -50,22 +51,29 @@ jobs:
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
           gpg-connect-agent reloadagent /bye
 
-      - name: Sign binary and hash
+      - name: Sign binaries and hashes
         run: |
-          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output dist/intspeed.sig dist/intspeed
-          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output dist/intspeed.sha512.sig dist/intspeed.sha512
-
+          # Sign CLI binary and hash
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output intspeed.sig intspeed
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output intspeed.sha512.sig intspeed.sha512
+          
+          # Sign server binary and hash
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output intspeed-server.sig intspeed-server
+          gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" --detach-sign --armor --default-key hq@rotko.net --output intspeed-server.sha512.sig intspeed-server.sha512
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
-          name: intspeed-and-signatures
+          name: intspeed-binaries
           path: |
-            dist/intspeed
-            dist/intspeed.sig
-            dist/intspeed.sha512
-            dist/intspeed.sha512.sig
-            speedtest-go
+            intspeed
+            intspeed.sig
+            intspeed.sha512
+            intspeed.sha512.sig
+            intspeed-server
+            intspeed-server.sig
+            intspeed-server.sha512
+            intspeed-server.sha512.sig
 
       - name: Bump version and tag
         id: bump_version
@@ -80,9 +88,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
           files: |
-            dist/intspeed
-            dist/intspeed.sig
-            dist/intspeed.sha512
-            dist/intspeed.sha512.sig
-            speedtest-go
+            intspeed
+            intspeed.sig
+            intspeed.sha512
+            intspeed.sha512.sig
+            intspeed-server
+            intspeed-server.sig
+            intspeed-server.sha512
+            intspeed-server.sha512.sig
           tag_name: ${{ steps.bump_version.outputs.new_tag }}
