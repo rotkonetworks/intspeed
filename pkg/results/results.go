@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/rotkonetworks/intspeed/pkg/speedtest"
-	"github.com/showwin/speedtest-go/speedtest"
+	extspeedtest "github.com/showwin/speedtest-go/speedtest"
 )
 
 type TestResults struct {
-	UserInfo  *speedtest.User         `json:"user_info"`
+	UserInfo  *extspeedtest.User      `json:"user_info"`
 	Tests     []speedtest.Result      `json:"tests"`
 	Timestamp time.Time               `json:"timestamp"`
 	Version   string                  `json:"version"`
