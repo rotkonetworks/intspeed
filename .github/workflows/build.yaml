@@ -2,8 +2,8 @@ name: Build and Publish Binary
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -75,17 +75,10 @@ jobs:
             intspeed-server.sha512
             intspeed-server.sha512.sig
 
-      - name: Bump version and tag
-        id: bump_version
-        uses: anothrNick/github-tag-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          WITH_V: false
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
             intspeed
@@ -96,4 +89,3 @@ jobs:
             intspeed-server.sig
             intspeed-server.sha512
             intspeed-server.sha512.sig
-          tag_name: ${{ steps.bump_version.outputs.new_tag }}
