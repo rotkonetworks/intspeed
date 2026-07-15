@@ -47,13 +47,17 @@ func start(_ js.Value, args []js.Value) any {
 	opts := engine.Options{BrowserOnly: true}
 	if len(args) > 1 && args[1].Type() == js.TypeString {
 		var o struct {
-			DownloadMB int64    `json:"downloadMB"`
-			UploadMB   int64    `json:"uploadMB"`
-			Locations  []string `json:"locations"`
+			DownloadMB   int64    `json:"downloadMB"`
+			UploadMB     int64    `json:"uploadMB"`
+			Pings        int      `json:"pings"`
+			MaxEndpoints int      `json:"maxEndpoints"`
+			Locations    []string `json:"locations"`
 		}
 		if json.Unmarshal([]byte(args[1].String()), &o) == nil {
 			opts.DownloadBytes = o.DownloadMB * 1_000_000
 			opts.UploadBytes = o.UploadMB * 1_000_000
+			opts.PingCount = o.Pings
+			opts.MaxEndpoints = o.MaxEndpoints
 			opts.Locations = o.Locations
 		}
 	}

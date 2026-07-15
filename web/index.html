@@ -134,11 +134,10 @@
         <span class="ps1">$</span>
         <span class="fixed">intspeed sweep --mode</span>
         <select id="mode">
-          <option value="5,2">quick</option>
-          <option value="10,4" selected>standard</option>
-          <option value="25,10">thorough</option>
+          <option value="fast" selected>fast</option>
+          <option value="comprehensive">comprehensive</option>
         </select>
-        <span class="l-dim" id="modeHint">10MB↓ 4MB↑ per city</span>
+        <span class="l-dim" id="modeHint"></span>
         <button class="run" id="start" disabled>run ⏎</button>
       </div>
       <div id="out"><span class="l-dim">fetching wasm engine…</span></div>
@@ -165,7 +164,8 @@
 <div id="cliCmds"><span class="l-dim"># measure what your provider sells you, from any linux box</span>
 <span class="ps1">$</span> <span class="l-loc">wget https://github.com/rotkonetworks/intspeed/releases/latest/download/intspeed</span>
 <span class="ps1">$</span> <span class="l-loc">chmod +x intspeed && sudo setcap cap_net_raw+ep ./intspeed</span>  <span class="l-dim"># cap for AS-path traceroute</span>
-<span class="ps1">$</span> <span class="l-loc">./intspeed sweep</span>  <span class="l-dim"># speeds + AS path per city</span>
+<span class="ps1">$</span> <span class="l-loc">./intspeed sweep --max-endpoints 1 --download-mb 5 --upload-mb 2 --pings 2 --aspath=false</span>  <span class="l-dim"># fast</span>
+<span class="ps1">$</span> <span class="l-loc">./intspeed sweep --download-mb 25 --upload-mb 10</span>  <span class="l-dim"># comprehensive: speeds + AS path per city</span>
 <span class="ps1">$</span> <span class="l-loc">./intspeed trace frankfurt</span>  <span class="l-dim"># thin mtr: per-hop rtt, ptr, AS → peeringdb</span></div>
     </div>
   </div>
@@ -182,8 +182,12 @@
 <script>
 const $ = s => document.querySelector(s);
 const out = $('#out');
-const MODE_HINT = { '5,2': '5MB↓ 2MB↑ per city', '10,4': '10MB↓ 4MB↑ per city', '25,10': '25MB↓ 10MB↑ per city' };
-const EST_PER_CITY = { '5,2': 11, '10,4': 16, '25,10': 32 }; // seconds, refined while running
+const MODES = {
+  fast:          { downloadMB: 5,  uploadMB: 2,  pings: 2, maxEndpoints: 1, est: 8,
+                   hint: '5MB↓ 2MB↑ · best endpoint per city · ~2 min' },
+  comprehensive: { downloadMB: 25, uploadMB: 10, pings: 4, maxEndpoints: 0, est: 35,
+                   hint: '25MB↓ 10MB↑ · every endpoint per city · ~10 min' },
+};
 
 let finalResults = null;
 let lines = {};        // location -> line element
@@ -199,9 +203,71 @@ function loadRegistry() {
   try {
     const reg = JSON.parse(intspeedRegistry());
     reg.locations.forEach(l => l.endpoints.forEach(e => {
-      if (e.asn) epAS[e.name.toLowerCase()] = { asn: e.asn, name: e.as_name };
+      const host = e.host ? e.host.split(':')[0] : (e.url ? new URL(e.url).hostname : '');
+      if (e.asn) epAS[e.name.toLowerCase()] = { asn: e.asn, name: e.as_name, host };
     }));
   } catch (_) {}
+}
+
+// ---- BGP route (RIPE RIS looking glass) --------------------------------
+// Browsers can't traceroute, but RIS collectors see the BGP paths into each
+// destination prefix — the AS-level route across the world. We render the
+// dominant path as hoverable peeringdb-linked chips.
+const holderCache = {};
+async function asHolder(asn) {
+  if (holderCache[asn] !== undefined) return holderCache[asn];
+  holderCache[asn] = ''; // dedupe concurrent fetches
+  try {
+    const h = (await (await fetch(`https://stat.ripe.net/data/as-overview/data.json?resource=AS${asn}`)).json()).data.holder || '';
+    holderCache[asn] = h.toLowerCase().split(/[ ,]/)[0].replace(/[^a-z0-9.-]/g, '').slice(0, 10);
+  } catch (_) {}
+  return holderCache[asn];
+}
+
+async function resolveA(host) {
+  try {
+    const j = await (await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`)).json();
+    const a = (j.Answer || []).find(r => r.type === 1);
+    return a && a.data;
+  } catch (_) { return null; }
+}
+
+async function bgpPath(host) {
+  const ip = await resolveA(host);
+  if (!ip) return null;
+  try {
+    const j = await (await fetch(`https://stat.ripe.net/data/looking-glass/data.json?resource=${ip}`)).json();
+    const counts = {};
+    (j.data.rrcs || []).forEach(rrc => (rrc.peers || []).forEach(p => {
+      // strip prepends; drop the RIS peer's own first hop
+      const path = p.as_path.trim().split(/\s+/).filter((v, i, a) => i === 0 || v !== a[i - 1]).slice(1);
+      if (path.length) counts[path.join(' ')] = (counts[path.join(' ')] || 0) + 1;
+    }));
+    // Prefer the most frequent path that actually shows transit (>=3 ASes);
+    // short paths from peers adjacent to the origin carry no route info.
+    const entries = Object.entries(counts)
+      .map(([p, c]) => ({ path: p.split(' '), c }))
+      .sort((a, b) => b.c - a.c);
+    const best = entries.find(e => e.path.length >= 3) ||
+      entries.slice().sort((a, b) => b.path.length - a.path.length)[0];
+    return best ? best.path : null;
+  } catch (_) { return null; }
+}
+
+// Fetch + append the BGP AS route to a finished city line.
+async function appendBgpRoute(l, via) {
+  const info = epAS[via];
+  if (!info || !info.host) return;
+  const path = await bgpPath(info.host);
+  if (!path || path.length < 2) return;
+  const shown = path.length > 5 ? path.slice(-5) : path;
+  const chips = [];
+  for (const asn of shown) {
+    chips.push(asChip(asn, await asHolder(asn)));
+  }
+  const prefix = path.length > shown.length ? '… → ' : '';
+  l.insertAdjacentHTML('beforeend',
+    ` <span class="l-dim">· bgp ${prefix}</span>${chips.join('<span class="l-dim"> → </span>')}`);
 }
 
 // Resolve the visitor's own ASN via RIPEstat (CORS-enabled) and print it.
@@ -286,9 +352,11 @@ function onEvent(json) {
       if (e.error) {
         renderLine(l, `<span class="l-err">✗ ${e.error}</span>`);
       } else {
-        const as = epAS[(l.dataset.via || '')];
+        const via = l.dataset.via || '';
+        const as = epAS[via];
         const chip = as ? ' · ' + asChip(as.asn, as.name) : '';
-        renderLine(l, `<span class="l-dim">${l.dataset.via || ''}</span>${chip}`);
+        renderLine(l, `<span class="l-dim">${via}</span>${chip}`);
+        appendBgpRoute(l, via); // async: BGP route chips arrive when RIS answers
       }
       curLine = null;
       break;
@@ -339,15 +407,14 @@ function startSweep() {
   $('#chartPanel').classList.add('hidden');
   out.innerHTML = '';
   lines = {}; curLine = null;
-  const mode = $('#mode').value;
-  const [d, u] = mode.split(',').map(Number);
+  const mode = MODES[$('#mode').value];
   const total = JSON.parse(intspeedLocations()).length;
-  line(`<span class="l-dim">registry 2026-07-15 · ${total} cities · browser-safe endpoints</span>`);
+  line(`<span class="l-dim">registry 2026-07-15 · ${total} cities · browser-safe endpoints · ${$('#mode').value}</span>`);
   line('&nbsp;');
-  run = { start: Date.now(), total, done: 0, estPerCity: EST_PER_CITY[mode], timer: setInterval(tick, 1000) };
+  run = { start: Date.now(), total, done: 0, estPerCity: mode.est, timer: setInterval(tick, 1000) };
   setPill('running', 'running');
   announceVisitorAS();
-  intspeedStart(onEvent, JSON.stringify({ downloadMB: d, uploadMB: u }));
+  intspeedStart(onEvent, JSON.stringify(mode));
 }
 
 function drawChart(results) {
@@ -417,7 +484,8 @@ function drawChart(results) {
   $('#chartPanel').classList.remove('hidden');
 }
 
-$('#mode').onchange = () => { $('#modeHint').textContent = MODE_HINT[$('#mode').value]; };
+$('#mode').onchange = () => { $('#modeHint').textContent = MODES[$('#mode').value].hint; };
+$('#mode').onchange();
 $('#dl').onclick = () => {
   const blob = new Blob([JSON.stringify({ timestamp: new Date().toISOString(), source: 'intspeed.rotko.net', results: finalResults }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -430,7 +498,8 @@ $('#copyCli').onclick = () => {
   navigator.clipboard.writeText(
     'wget https://github.com/rotkonetworks/intspeed/releases/latest/download/intspeed\n' +
     'chmod +x intspeed && sudo setcap cap_net_raw+ep ./intspeed\n' +
-    './intspeed sweep\n' +
+    './intspeed sweep --max-endpoints 1 --download-mb 5 --upload-mb 2 --pings 2 --aspath=false\n' +
+    './intspeed sweep --download-mb 25 --upload-mb 10\n' +
     './intspeed trace frankfurt\n');
   $('#copyCli').textContent = 'copied';
   setTimeout(() => $('#copyCli').textContent = 'copy', 1500);
