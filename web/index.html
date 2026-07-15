@@ -58,7 +58,8 @@
 
   .term-body { padding: 1rem 1.1rem 1.1rem; min-height: 12rem; }
   .prompt-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .75rem; }
-  .prompt-row .ps1 { color: var(--green); font-weight: 700; }
+  .ps1 { color: var(--green); font-weight: 700; }
+  #cliCmds { white-space: pre; overflow-x: auto; }
   .prompt-row .fixed { color: var(--fg); }
   select {
     background: transparent; color: var(--cyan); border: 0; border-bottom: 1px dashed var(--border);
@@ -74,13 +75,15 @@
   button.run:disabled { color: var(--dim); border-color: var(--border); cursor: default; }
 
   #out { white-space: pre-wrap; word-break: break-word; }
-  #out .l-loc  { color: var(--fg); }
-  #out .l-ping { color: var(--yellow); }
-  #out .l-down { color: var(--cyan); }
-  #out .l-up   { color: var(--cyan-soft); }
-  #out .l-dim  { color: var(--dim); }
-  #out .l-err  { color: var(--red); }
-  #out .l-ok   { color: var(--green); }
+  .l-loc  { color: var(--fg); }
+  .l-ping { color: var(--yellow); }
+  .l-down { color: var(--cyan); }
+  .l-up   { color: var(--cyan-soft); }
+  .l-dim  { color: var(--dim); }
+  .l-err  { color: var(--red); }
+  .l-ok   { color: var(--green); }
+  a.l-as  { color: var(--teal); text-decoration: none; border-bottom: 1px dotted var(--teal); }
+  a.l-as:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
   .cursor::after { content: '▊'; color: var(--cyan); animation: blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
@@ -147,6 +150,20 @@
     </div>
   </div>
 
+  <div class="term" id="cliCard">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="title">run it from your vps / server — full endpoint set + AS-path traceroute</span>
+      <span class="pill" style="cursor:pointer" id="copyCli">copy</span>
+    </div>
+    <div class="term-body" style="min-height:0">
+<div id="cliCmds"><span class="l-dim"># measure what your provider sells you, from any linux box</span>
+<span class="ps1">$</span> <span class="l-loc">wget https://github.com/rotkonetworks/intspeed/releases/latest/download/intspeed</span>
+<span class="ps1">$</span> <span class="l-loc">chmod +x intspeed && sudo setcap cap_net_raw+ep ./intspeed</span>  <span class="l-dim"># cap for AS-path traceroute</span>
+<span class="ps1">$</span> <span class="l-loc">./intspeed sweep</span></div>
+    </div>
+  </div>
+
   <footer>
     measurements run client-side (go → wasm) against verified public endpoints in each city ·
     results vary with time of day and remote load — run it a few times ·
@@ -166,6 +183,36 @@ let finalResults = null;
 let lines = {};        // location -> line element
 let curLine = null;    // element being updated
 let run = null;        // { start, total, done, timer }
+let epAS = {};         // endpoint name -> {asn, name}
+
+const pdb = asn => `https://www.peeringdb.com/search?q=as${asn}`;
+const asChip = (asn, name) =>
+  `<a class="l-as" href="${pdb(asn)}" target="_blank" rel="noopener">${name || 'as' + asn}</a>`;
+
+function loadRegistry() {
+  try {
+    const reg = JSON.parse(intspeedRegistry());
+    reg.locations.forEach(l => l.endpoints.forEach(e => {
+      if (e.asn) epAS[e.name.toLowerCase()] = { asn: e.asn, name: e.as_name };
+    }));
+  } catch (_) {}
+}
+
+// Resolve the visitor's own ASN via RIPEstat (CORS-enabled) and print it.
+async function announceVisitorAS() {
+  try {
+    const ip = (await (await fetch('https://stat.ripe.net/data/whats-my-ip/data.json')).json()).data.ip;
+    const ni = (await (await fetch(`https://stat.ripe.net/data/network-info/data.json?resource=${ip}`)).json()).data;
+    const asn = ni.asns && ni.asns[0];
+    if (!asn) return;
+    let holder = '';
+    try {
+      holder = (await (await fetch(`https://stat.ripe.net/data/as-overview/data.json?resource=AS${asn}`)).json()).data.holder || '';
+      holder = holder.toLowerCase().split(/[ ,]/)[0].slice(0, 10);
+    } catch (_) {}
+    line(`<span class="l-dim">your network:</span> ${asChip(asn, holder)} <span class="l-dim">AS${asn} · ${ni.prefix || ''}</span>`);
+  } catch (_) {}
+}
 
 const pad = (s, n) => String(s).padEnd(n);
 const fmtEta = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
@@ -233,7 +280,9 @@ function onEvent(json) {
       if (e.error) {
         renderLine(l, `<span class="l-err">✗ ${e.error}</span>`);
       } else {
-        renderLine(l, `<span class="l-dim">${l.dataset.via || ''}</span>`);
+        const as = epAS[(l.dataset.via || '')];
+        const chip = as ? ' · ' + asChip(as.asn, as.name) : '';
+        renderLine(l, `<span class="l-dim">${l.dataset.via || ''}</span>${chip}`);
       }
       curLine = null;
       break;
@@ -291,6 +340,7 @@ function startSweep() {
   line('&nbsp;');
   run = { start: Date.now(), total, done: 0, estPerCity: EST_PER_CITY[mode], timer: setInterval(tick, 1000) };
   setPill('running', 'running');
+  announceVisitorAS();
   intspeedStart(onEvent, JSON.stringify({ downloadMB: d, uploadMB: u }));
 }
 
@@ -300,48 +350,62 @@ function drawChart(results) {
   if (!ok.length) return;
 
   const W = 1020, H = 470;
-  const m = { top: 56, right: 16, bottom: 96, left: 52 };
+  const m = { top: 56, right: 52, bottom: 96, left: 52 };
   const plotW = W - m.left - m.right, plotH = H - m.top - m.bottom;
-  const maxVal = Math.max(...ok.flatMap(r => [r.download_mbps, r.upload_mbps, r.latency_ms]), 1);
 
-  const rawStep = maxVal / 5;
-  const pow = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const step = [1, 2, 2.5, 5, 10].map(x => x * pow).find(s => s >= rawStep);
-  const yMax = Math.ceil(maxVal / step) * step;
-  const y = v => m.top + plotH - v / yMax * plotH;
+  const nice = v => {
+    const raw = v / 5, pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(x => x * pow).find(s => s >= raw);
+    return [step, Math.ceil(v / step) * step];
+  };
+  // left axis: bandwidth bars · right axis: latency line
+  const [stepL, maxL] = nice(Math.max(...ok.flatMap(r => [r.download_mbps, r.upload_mbps]), 1));
+  const [stepR, maxR] = nice(Math.max(...ok.map(r => r.latency_ms), 1));
+  const yL = v => m.top + plotH - v / maxL * plotH;
+  const yR = v => m.top + plotH - v / maxR * plotH;
 
   const group = plotW / ok.length;
-  const barW = Math.min(11, (group - 8) / 3);
+  const barW = Math.min(14, (group - 10) / 2);
 
   const C = { down: '#22d3ee', up: '#155e75', ping: '#facc15' };
   let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
 
   s += `<text x="${m.left}" y="20" fill="#e6e9ee" font-size="15" font-weight="700" font-family="Inter,sans-serif">International Speedtest by Rotko Networks</text>`;
-  const leg = [['download mbps', C.down], ['upload mbps', C.up], ['latency ms', C.ping]];
   let lx = m.left;
-  leg.forEach(([label, color]) => {
+  [['download mbps', C.down], ['upload mbps', C.up]].forEach(([label, color]) => {
     s += `<rect x="${lx}" y="32" width="10" height="10" rx="2" fill="${color}"/>`;
     s += `<text x="${lx + 15}" y="41" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace">${label}</text>`;
     lx += 15 + label.length * 6.6 + 26;
   });
+  s += `<line x1="${lx}" y1="37" x2="${lx + 14}" y2="37" stroke="${C.ping}" stroke-width="2"/><circle cx="${lx + 7}" cy="37" r="2.5" fill="${C.ping}"/>`;
+  s += `<text x="${lx + 19}" y="41" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace">latency ms</text>`;
 
-  for (let v = 0; v <= yMax; v += step) {
-    s += `<line x1="${m.left}" y1="${y(v)}" x2="${W - m.right}" y2="${y(v)}" stroke="#16203a" stroke-width="1"/>`;
-    s += `<text x="${m.left - 8}" y="${y(v) + 4}" fill="#64748b" font-size="10.5" text-anchor="end" font-family="JetBrains Mono,monospace">${v}</text>`;
+  for (let v = 0; v <= maxL; v += stepL) {
+    s += `<line x1="${m.left}" y1="${yL(v)}" x2="${W - m.right}" y2="${yL(v)}" stroke="#16203a" stroke-width="1"/>`;
+    s += `<text x="${m.left - 8}" y="${yL(v) + 4}" fill="#64748b" font-size="10.5" text-anchor="end" font-family="JetBrains Mono,monospace">${v}</text>`;
   }
+  for (let v = 0; v <= maxR; v += stepR) {
+    s += `<text x="${W - m.right + 8}" y="${yR(v) + 4}" fill="#a1720a" font-size="10.5" font-family="JetBrains Mono,monospace">${v}</text>`;
+  }
+
+  // latency as a temperature-style curve: area fill rising left→right
+  const pts = ok.map((r, i) => [m.left + group * (i + .5), yR(r.latency_ms)]);
+  const base = m.top + plotH;
+  s += `<path d="M ${pts[0][0]} ${base} ${pts.map(p => `L ${p[0]} ${p[1]}`).join(' ')} L ${pts[pts.length - 1][0]} ${base} Z" fill="rgba(250,204,21,.07)"/>`;
+  s += `<path d="M ${pts.map(p => `${p[0]} ${p[1]}`).join(' L ')}" fill="none" stroke="${C.ping}" stroke-width="2" stroke-linejoin="round"/>`;
 
   ok.forEach((r, i) => {
     const cx = m.left + group * (i + .5);
-    const bars = [[r.download_mbps, C.down], [r.upload_mbps, C.up], [r.latency_ms, C.ping]];
-    bars.forEach(([v, color], j) => {
-      const bx = cx + (j - 1.5) * barW + (j - 1) * 1;
-      const by = y(Math.max(v, 0));
-      s += `<rect x="${bx}" y="${by}" width="${barW}" height="${Math.max(1, m.top + plotH - by)}" rx="1.5" fill="${color}"/>`;
+    [[r.download_mbps, C.down], [r.upload_mbps, C.up]].forEach(([v, color], j) => {
+      const bx = cx + (j - 1) * barW + (j - .5) * 1;
+      const by = yL(Math.max(v, 0));
+      s += `<rect x="${bx}" y="${by}" width="${barW}" height="${Math.max(1, base - by)}" rx="1.5" fill="${color}"/>`;
     });
-    s += `<text x="${cx}" y="${m.top + plotH + 12}" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace" transform="rotate(-55 ${cx} ${m.top + plotH + 12})" text-anchor="end">${r.location.toLowerCase().replace(/\s/g, '')}</text>`;
+    s += `<circle cx="${cx}" cy="${yR(r.latency_ms)}" r="3" fill="${C.ping}"/>`;
+    s += `<text x="${cx}" y="${base + 12}" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace" transform="rotate(-55 ${cx} ${base + 12})" text-anchor="end">${r.location.toLowerCase().replace(/\s/g, '')}</text>`;
   });
 
-  s += `<line x1="${m.left}" y1="${m.top + plotH}" x2="${W - m.right}" y2="${m.top + plotH}" stroke="#1e293b" stroke-width="1"/>`;
+  s += `<line x1="${m.left}" y1="${base}" x2="${W - m.right}" y2="${base}" stroke="#1e293b" stroke-width="1"/>`;
   s += `</svg>`;
   $('#chart').innerHTML = s;
   $('#chartPanel').classList.remove('hidden');
@@ -356,12 +420,21 @@ $('#dl').onclick = () => {
   a.click();
 };
 $('#start').onclick = startSweep;
+$('#copyCli').onclick = () => {
+  navigator.clipboard.writeText(
+    'wget https://github.com/rotkonetworks/intspeed/releases/latest/download/intspeed\n' +
+    'chmod +x intspeed && sudo setcap cap_net_raw+ep ./intspeed\n' +
+    './intspeed sweep\n');
+  $('#copyCli').textContent = 'copied';
+  setTimeout(() => $('#copyCli').textContent = 'copy', 1500);
+};
 
 const go = new Go();
 WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject)
   .catch(() => fetch('main.wasm').then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, go.importObject)))
   .then(res => {
     go.run(res.instance);
+    loadRegistry();
     out.innerHTML = '';
     line(`<span class="l-dim">engine ready · ${JSON.parse(intspeedLocations()).length} cities · press run</span>`);
     line('<span class="cursor"></span>');

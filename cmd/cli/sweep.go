@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/rotkonetworks/intspeed/pkg/aspath"
 	"github.com/rotkonetworks/intspeed/pkg/endpoints"
 	"github.com/rotkonetworks/intspeed/pkg/engine"
 	"github.com/spf13/cobra"
@@ -21,6 +23,7 @@ var (
 	sweepPings      int
 	sweepLocations  string
 	sweepJSON       bool
+	sweepASPath     bool
 )
 
 func newSweepCmd() *cobra.Command {
@@ -34,6 +37,7 @@ func newSweepCmd() *cobra.Command {
 	cmd.Flags().IntVar(&sweepPings, "pings", 4, "Latency samples per endpoint")
 	cmd.Flags().StringVar(&sweepLocations, "locations", "", "Comma-separated subset of locations (default: all)")
 	cmd.Flags().BoolVar(&sweepJSON, "json", false, "Print raw JSON results to stdout")
+	cmd.Flags().BoolVar(&sweepASPath, "aspath", true, "Trace AS-level path per location (needs root/CAP_NET_RAW)")
 	return cmd
 }
 
@@ -78,6 +82,9 @@ func runSweep(cmd *cobra.Command, args []string) {
 		json.NewEncoder(os.Stdout).Encode(results)
 	} else {
 		printSweepTable(results)
+		if sweepASPath {
+			printASPaths(reg, results)
+		}
 	}
 
 	if err := os.MkdirAll(outputDir, 0755); err == nil {
@@ -94,6 +101,73 @@ func runSweep(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
+}
+
+// printASPaths traceroutes each location's download endpoint and prints the
+// AS-level path, every AS hyperlinked (OSC 8) to its PeeringDB entry.
+func printASPaths(reg *endpoints.Registry, results []engine.LocationResult) {
+	fmt.Printf("\nAS PATHS (via traceroute, each AS links to peeringdb)\n")
+	fmt.Println(strings.Repeat("─", 78))
+	for _, r := range results {
+		if r.DownloadVia == "" {
+			continue
+		}
+		host := endpointHost(reg, r.Location, r.DownloadVia)
+		if host == "" {
+			continue
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		hops, err := aspath.Trace(ctx, host, 30, 700*time.Millisecond)
+		cancel()
+		if err == aspath.ErrNoPermission {
+			fmt.Println("skipped: raw ICMP needs privileges — run as root or:")
+			fmt.Println("  sudo setcap cap_net_raw+ep $(which intspeed)")
+			return
+		}
+		if err != nil {
+			fmt.Printf("%-13s trace failed: %v\n", r.Location, err)
+			continue
+		}
+		path := aspath.ASPath(hops)
+		if len(path) == 0 {
+			fmt.Printf("%-13s no mappable hops\n", r.Location)
+			continue
+		}
+		segs := make([]string, len(path))
+		for i, as := range path {
+			label := as.Name
+			if label == "" {
+				label = "as" + as.ASN
+			}
+			segs[i] = osc8(aspath.PeeringDBURL(as.ASN), label)
+		}
+		fmt.Printf("%-13s %s\n", r.Location, strings.Join(segs, " → "))
+	}
+}
+
+// osc8 wraps text in an OSC 8 terminal hyperlink.
+func osc8(url, text string) string {
+	return fmt.Sprintf("\x1b]8;;%s\x1b\\%s\x1b]8;;\x1b\\", url, text)
+}
+
+// endpointHost resolves the hostname of a named endpoint within a location.
+func endpointHost(reg *endpoints.Registry, location, name string) string {
+	loc := reg.ForLocation(location)
+	if loc == nil {
+		return ""
+	}
+	for _, e := range loc.Endpoints {
+		if e.Name != name {
+			continue
+		}
+		if e.Host != "" {
+			return strings.Split(e.Host, ":")[0]
+		}
+		if u, err := url.Parse(e.URL); err == nil {
+			return u.Hostname()
+		}
+	}
+	return ""
 }
 
 func printSweepTable(results []engine.LocationResult) {

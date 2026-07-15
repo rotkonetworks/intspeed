@@ -16,8 +16,14 @@ import (
 
 func main() {
 	js.Global().Set("intspeedLocations", js.FuncOf(locationList))
+	js.Global().Set("intspeedRegistry", js.FuncOf(registryJSON))
 	js.Global().Set("intspeedStart", js.FuncOf(start))
 	select {}
+}
+
+// registryJSON() -> the full endpoint registry (incl. ASN metadata).
+func registryJSON(js.Value, []js.Value) any {
+	return string(endpoints.Raw())
 }
 
 // locationList() -> JSON array of location names, for pre-rendering the UI.

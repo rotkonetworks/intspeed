@@ -23,8 +23,14 @@ type Endpoint struct {
 	Browser           bool   `json:"browser"`
 	TimingAllowOrigin bool   `json:"timing_allow_origin,omitempty"`
 	Upload            bool   `json:"upload"`
+	ASN               string `json:"asn,omitempty"`
+	ASName            string `json:"as_name,omitempty"` // short (<=10 chars)
 	Note              string `json:"note,omitempty"`
 }
+
+// Raw returns the embedded registry JSON verbatim (for serving to the
+// browser frontend).
+func Raw() []byte { return rawEndpoints }
 
 type LocationEndpoints struct {
 	Name      string     `json:"name"`

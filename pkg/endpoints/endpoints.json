@@ -1,185 +1,960 @@
 {
-  "version": 1,
-  "verified": "2026-07-15",
   "locations": [
     {
-      "name": "New York",
       "endpoints": [
-        {"name": "Clouvider", "kind": "ookla", "id": "35055", "host": "nyc.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Pilot Fiber", "kind": "ookla", "id": "13098", "host": "speedtest.pilotfiber.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr New Jersey", "kind": "file", "url": "https://nj-us-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false, "note": "EWR, NYC metro"},
-        {"name": "Linode Newark", "kind": "file", "url": "https://speedtest.newark.linode.com/100MB-newark.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "clouvider",
+          "asn": "62240",
+          "browser": true,
+          "host": "nyc.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080",
+          "id": "35055",
+          "kind": "ookla",
+          "name": "Clouvider",
+          "upload": true
+        },
+        {
+          "as_name": "pilot",
+          "asn": "46450",
+          "browser": true,
+          "host": "speedtest.pilotfiber.com.prod.hosts.ooklaserver.net:8080",
+          "id": "13098",
+          "kind": "ookla",
+          "name": "Pilot Fiber",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr New Jersey",
+          "note": "EWR, NYC metro",
+          "upload": false,
+          "url": "https://nj-us-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Newark",
+          "upload": false,
+          "url": "https://speedtest.newark.linode.com/100MB-newark.bin"
+        }
+      ],
+      "name": "New York"
     },
     {
-      "name": "Los Angeles",
       "endpoints": [
-        {"name": "Starry", "kind": "ookla", "id": "18229", "host": "speedtest-server-lax.starry.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "ReliableSite", "kind": "ookla", "id": "34840", "host": "los-angeles-speedtest.reliablesite.net.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Sharktech LA", "kind": "librespeed", "url": "https://laxspeed.sharktech.net", "browser": true, "upload": true},
-        {"name": "Vultr Los Angeles", "kind": "file", "url": "https://lax-ca-us-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Nitel", "kind": "ookla", "id": "12191", "host": "speedtest.lax1.nitelusa.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true}
-      ]
+        {
+          "as_name": "asn-starry",
+          "asn": "395354",
+          "browser": true,
+          "host": "speedtest-server-lax.starry.com.prod.hosts.ooklaserver.net:8080",
+          "id": "18229",
+          "kind": "ookla",
+          "name": "Starry",
+          "upload": true
+        },
+        {
+          "as_name": "reliablesi",
+          "asn": "23470",
+          "browser": true,
+          "host": "los-angeles-speedtest.reliablesite.net.prod.hosts.ooklaserver.net:8080",
+          "id": "34840",
+          "kind": "ookla",
+          "name": "ReliableSite",
+          "upload": true
+        },
+        {
+          "as_name": "sharktech",
+          "asn": "46844",
+          "browser": true,
+          "kind": "librespeed",
+          "name": "Sharktech LA",
+          "upload": true,
+          "url": "https://laxspeed.sharktech.net"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Los Angeles",
+          "upload": false,
+          "url": "https://lax-ca-us-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "nitel",
+          "asn": "53828",
+          "browser": false,
+          "host": "speedtest.lax1.nitelusa.net.prod.hosts.ooklaserver.net:8080",
+          "id": "12191",
+          "kind": "ookla",
+          "name": "Nitel",
+          "upload": true
+        }
+      ],
+      "name": "Los Angeles"
     },
     {
-      "name": "Chicago",
       "endpoints": [
-        {"name": "KamaTera", "kind": "ookla", "id": "50463", "host": "speedtest.us-ch.kamatera.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Tata Communications", "kind": "ookla", "id": "73612", "host": "ookla.ct8.as6453.net.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Sharktech Chicago", "kind": "librespeed", "url": "https://chispeed.sharktech.net", "browser": true, "upload": true},
-        {"name": "Vultr Chicago", "kind": "file", "url": "https://il-us-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Linode Chicago", "kind": "file", "url": "https://speedtest.chicago.linode.com/100MB-chicago.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "kamatera",
+          "asn": "36007",
+          "browser": true,
+          "host": "speedtest.us-ch.kamatera.com.prod.hosts.ooklaserver.net:8080",
+          "id": "50463",
+          "kind": "ookla",
+          "name": "KamaTera",
+          "upload": true
+        },
+        {
+          "as_name": "as6453",
+          "asn": "6453",
+          "browser": true,
+          "host": "ookla.ct8.as6453.net.prod.hosts.ooklaserver.net:8080",
+          "id": "73612",
+          "kind": "ookla",
+          "name": "Tata Communications",
+          "upload": true
+        },
+        {
+          "as_name": "sharktech",
+          "asn": "46844",
+          "browser": true,
+          "kind": "librespeed",
+          "name": "Sharktech Chicago",
+          "upload": true,
+          "url": "https://chispeed.sharktech.net"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Chicago",
+          "upload": false,
+          "url": "https://il-us-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Chicago",
+          "upload": false,
+          "url": "https://speedtest.chicago.linode.com/100MB-chicago.bin"
+        }
+      ],
+      "name": "Chicago"
     },
     {
-      "name": "Toronto",
       "endpoints": [
-        {"name": "Bell Canada", "kind": "ookla", "id": "53393", "host": "wirelinespeedtesttoronto.srvr.bell.ca.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "TELUS Toronto", "kind": "ookla", "id": "3575", "host": "toronto.speedtest.telus.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr Toronto", "kind": "file", "url": "https://tor-ca-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Teksavvy", "kind": "ookla", "id": "32632", "host": "speedtest2-tor.teksavvy.com.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true}
-      ]
+        {
+          "as_name": "bacom",
+          "asn": "577",
+          "browser": true,
+          "host": "wirelinespeedtesttoronto.srvr.bell.ca.prod.hosts.ooklaserver.net:8080",
+          "id": "53393",
+          "kind": "ookla",
+          "name": "Bell Canada",
+          "upload": true
+        },
+        {
+          "as_name": "asn852",
+          "asn": "852",
+          "browser": true,
+          "host": "toronto.speedtest.telus.com.prod.hosts.ooklaserver.net:8080",
+          "id": "3575",
+          "kind": "ookla",
+          "name": "TELUS Toronto",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Toronto",
+          "upload": false,
+          "url": "https://tor-ca-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "teksavvy",
+          "asn": "5645",
+          "browser": false,
+          "host": "speedtest2-tor.teksavvy.com.prod.hosts.ooklaserver.net:8080",
+          "id": "32632",
+          "kind": "ookla",
+          "name": "Teksavvy",
+          "upload": true
+        }
+      ],
+      "name": "Toronto"
     },
     {
-      "name": "Vancouver",
       "endpoints": [
-        {"name": "TELUS Vancouver", "kind": "ookla", "id": "3049", "host": "vancouver.speedtest.telus.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Shaw Communications", "kind": "ookla", "id": "4243", "host": "speedtest.vc.shawcable.net:8080", "browser": true, "upload": true},
-        {"name": "UBC", "kind": "ookla", "id": "19703", "host": "speedtest.ubc.ca.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Vultr Seattle", "kind": "file", "url": "https://wa-us-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false, "note": "Seattle, ~230 km proxy — no in-city cloud file"}
-      ]
+        {
+          "as_name": "asn852",
+          "asn": "852",
+          "browser": true,
+          "host": "vancouver.speedtest.telus.com.prod.hosts.ooklaserver.net:8080",
+          "id": "3049",
+          "kind": "ookla",
+          "name": "TELUS Vancouver",
+          "upload": true
+        },
+        {
+          "as_name": "shaw",
+          "asn": "6327",
+          "browser": true,
+          "host": "speedtest.vc.shawcable.net:8080",
+          "id": "4243",
+          "kind": "ookla",
+          "name": "Shaw Communications",
+          "upload": true
+        },
+        {
+          "as_name": "ubc",
+          "asn": "393249",
+          "browser": false,
+          "host": "speedtest.ubc.ca.prod.hosts.ooklaserver.net:8080",
+          "id": "19703",
+          "kind": "ookla",
+          "name": "UBC",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Seattle",
+          "note": "Seattle, ~230 km proxy — no in-city cloud file",
+          "upload": false,
+          "url": "https://wa-us-ping.vultr.com/vultr.com.100MB.bin"
+        }
+      ],
+      "name": "Vancouver"
     },
     {
-      "name": "London",
       "endpoints": [
-        {"name": "YouFibre", "kind": "ookla", "id": "55137", "host": "speedtest-1.london.network.as212655.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr London", "kind": "file", "url": "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "toob", "kind": "ookla", "id": "26922", "host": "speedtest.toob.co.uk:8080", "browser": false, "upload": true},
-        {"name": "Structured Communications", "kind": "ookla", "id": "11445", "host": "lon.host.speedtest.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Linode London", "kind": "file", "url": "https://speedtest.london.linode.com/100MB-london.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "youfibre",
+          "asn": "212655",
+          "browser": true,
+          "host": "speedtest-1.london.network.as212655.net:8080",
+          "id": "55137",
+          "kind": "ookla",
+          "name": "YouFibre",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr London",
+          "upload": false,
+          "url": "https://lon-gb-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "toob",
+          "asn": "60377",
+          "browser": false,
+          "host": "speedtest.toob.co.uk:8080",
+          "id": "26922",
+          "kind": "ookla",
+          "name": "toob",
+          "upload": true
+        },
+        {
+          "as_name": "ukscomms-a",
+          "asn": "199283",
+          "browser": false,
+          "host": "lon.host.speedtest.net.prod.hosts.ooklaserver.net:8080",
+          "id": "11445",
+          "kind": "ookla",
+          "name": "Structured Communications",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode London",
+          "upload": false,
+          "url": "https://speedtest.london.linode.com/100MB-london.bin"
+        }
+      ],
+      "name": "London"
     },
     {
-      "name": "Frankfurt",
       "endpoints": [
-        {"name": "TELE AG", "kind": "ookla", "id": "44477", "host": "speedtest.58243.as.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr Frankfurt", "kind": "file", "url": "https://fra-de-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Clouvider Frankfurt", "kind": "ookla", "id": "35692", "host": "fra.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Deutsche Telekom", "kind": "ookla", "id": "31448", "host": "ffm.wsqm.telekom-dienste.de.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Linode Frankfurt", "kind": "file", "url": "https://speedtest.frankfurt.linode.com/100MB-frankfurt.bin", "browser": false, "upload": false},
-        {"name": "Hetzner Falkenstein", "kind": "file", "url": "https://fsn1-speed.hetzner.com/100MB.bin", "browser": false, "upload": false, "note": "Falkenstein, ~250 km from Frankfurt"}
-      ]
+        {
+          "as_name": "teleag",
+          "asn": "58243",
+          "browser": true,
+          "host": "speedtest.58243.as.prod.hosts.ooklaserver.net:8080",
+          "id": "44477",
+          "kind": "ookla",
+          "name": "TELE AG",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Frankfurt",
+          "upload": false,
+          "url": "https://fra-de-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "clouvider",
+          "asn": "62240",
+          "browser": false,
+          "host": "fra.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080",
+          "id": "35692",
+          "kind": "ookla",
+          "name": "Clouvider Frankfurt",
+          "upload": true
+        },
+        {
+          "as_name": "dtag",
+          "asn": "3320",
+          "browser": false,
+          "host": "ffm.wsqm.telekom-dienste.de.prod.hosts.ooklaserver.net:8080",
+          "id": "31448",
+          "kind": "ookla",
+          "name": "Deutsche Telekom",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Frankfurt",
+          "upload": false,
+          "url": "https://speedtest.frankfurt.linode.com/100MB-frankfurt.bin"
+        },
+        {
+          "as_name": "hetzner-as",
+          "asn": "24940",
+          "browser": false,
+          "kind": "file",
+          "name": "Hetzner Falkenstein",
+          "note": "Falkenstein, ~250 km from Frankfurt",
+          "upload": false,
+          "url": "https://fsn1-speed.hetzner.com/100MB.bin"
+        }
+      ],
+      "name": "Frankfurt"
     },
     {
-      "name": "Amsterdam",
       "endpoints": [
-        {"name": "Sharktech Amsterdam", "kind": "librespeed", "url": "https://amsspeed.sharktech.net/backend", "browser": true, "upload": true},
-        {"name": "Vultr Amsterdam", "kind": "file", "url": "https://ams-nl-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "NovoServe", "kind": "ookla", "id": "69003", "host": "speedtest.nl.novoserve.com:8080", "browser": false, "upload": true},
-        {"name": "Clouvider Amsterdam", "kind": "ookla", "id": "35058", "host": "ams.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Duocast", "kind": "ookla", "id": "14904", "host": "speedtest.duocast.net:8080", "browser": false, "upload": true},
-        {"name": "Linode Amsterdam", "kind": "file", "url": "https://speedtest.amsterdam.linode.com/100MB-amsterdam.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "sharktech",
+          "asn": "46844",
+          "browser": true,
+          "kind": "librespeed",
+          "name": "Sharktech Amsterdam",
+          "upload": true,
+          "url": "https://amsspeed.sharktech.net/backend"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Amsterdam",
+          "upload": false,
+          "url": "https://ams-nl-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "novoserve-",
+          "asn": "24875",
+          "browser": false,
+          "host": "speedtest.nl.novoserve.com:8080",
+          "id": "69003",
+          "kind": "ookla",
+          "name": "NovoServe",
+          "upload": true
+        },
+        {
+          "as_name": "clouvider",
+          "asn": "62240",
+          "browser": false,
+          "host": "ams.speedtest.clouvider.net.prod.hosts.ooklaserver.net:8080",
+          "id": "35058",
+          "kind": "ookla",
+          "name": "Clouvider Amsterdam",
+          "upload": true
+        },
+        {
+          "as_name": "duocast-as",
+          "asn": "31477",
+          "browser": false,
+          "host": "speedtest.duocast.net:8080",
+          "id": "14904",
+          "kind": "ookla",
+          "name": "Duocast",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Amsterdam",
+          "upload": false,
+          "url": "https://speedtest.amsterdam.linode.com/100MB-amsterdam.bin"
+        }
+      ],
+      "name": "Amsterdam"
     },
     {
-      "name": "Stockholm",
       "endpoints": [
-        {"name": "Telia Sweden", "kind": "ookla", "id": "45936", "host": "se-speedt02.hy.nis.telia.net.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr Stockholm", "kind": "file", "url": "https://sto-se-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "SUNET", "kind": "ookla", "id": "26852", "host": "fd.sunet.se.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Tele2 Sweden", "kind": "ookla", "id": "6061", "host": "stb-speedtest-1.tele2.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Linode Stockholm", "kind": "file", "url": "https://speedtest.stockholm.linode.com/100MB-stockholm.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "telianet-s",
+          "asn": "3301",
+          "browser": true,
+          "host": "se-speedt02.hy.nis.telia.net.prod.hosts.ooklaserver.net:8080",
+          "id": "45936",
+          "kind": "ookla",
+          "name": "Telia Sweden",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Stockholm",
+          "upload": false,
+          "url": "https://sto-se-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "sunet",
+          "asn": "1653",
+          "browser": false,
+          "host": "fd.sunet.se.prod.hosts.ooklaserver.net:8080",
+          "id": "26852",
+          "kind": "ookla",
+          "name": "SUNET",
+          "upload": true
+        },
+        {
+          "as_name": "swipnet",
+          "asn": "1257",
+          "browser": false,
+          "host": "stb-speedtest-1.tele2.net.prod.hosts.ooklaserver.net:8080",
+          "id": "6061",
+          "kind": "ookla",
+          "name": "Tele2 Sweden",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Stockholm",
+          "upload": false,
+          "url": "https://speedtest.stockholm.linode.com/100MB-stockholm.bin"
+        }
+      ],
+      "name": "Stockholm"
     },
     {
-      "name": "Paris",
       "endpoints": [
-        {"name": "Scaleway", "kind": "ookla", "id": "61933", "host": "st1.scaleway.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "moji", "kind": "ookla", "id": "62035", "host": "ookla.moji.fr.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Vultr Paris", "kind": "file", "url": "https://par-fr-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "KEYYO", "kind": "ookla", "id": "27961", "host": "perf.keyyo.net:8080", "browser": false, "upload": true},
-        {"name": "Linode Paris", "kind": "file", "url": "https://speedtest.paris.linode.com/100MB-paris.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "as12876",
+          "asn": "12876",
+          "browser": true,
+          "host": "st1.scaleway.com.prod.hosts.ooklaserver.net:8080",
+          "id": "61933",
+          "kind": "ookla",
+          "name": "Scaleway",
+          "upload": true
+        },
+        {
+          "as_name": "moji",
+          "asn": "47160",
+          "browser": true,
+          "host": "ookla.moji.fr.prod.hosts.ooklaserver.net:8080",
+          "id": "62035",
+          "kind": "ookla",
+          "name": "moji",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Paris",
+          "upload": false,
+          "url": "https://par-fr-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "keyyo",
+          "asn": "34659",
+          "browser": false,
+          "host": "perf.keyyo.net:8080",
+          "id": "27961",
+          "kind": "ookla",
+          "name": "KEYYO",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Paris",
+          "upload": false,
+          "url": "https://speedtest.paris.linode.com/100MB-paris.bin"
+        }
+      ],
+      "name": "Paris"
     },
     {
-      "name": "Tokyo",
       "endpoints": [
-        {"name": "Verizon Tokyo", "kind": "ookla", "id": "50467", "host": "jp-nperf.verizon.net.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "DataPacket Tokyo", "kind": "file", "url": "https://tyo.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false},
-        {"name": "Vultr Tokyo", "kind": "file", "url": "https://hnd-jp-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "fdcservers Tokyo", "kind": "ookla", "id": "28910", "host": "speedtest.hnd.fdcservers.net:8080", "browser": false, "upload": true},
-        {"name": "IPA CyberLab 400G", "kind": "ookla", "id": "48463", "host": "speed.udx.icscoe.jp:8080", "browser": false, "upload": true},
-        {"name": "Linode Tokyo", "kind": "file", "url": "https://speedtest.tokyo2.linode.com/100MB-tokyo2.bin", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "uunet",
+          "asn": "703",
+          "browser": true,
+          "host": "jp-nperf.verizon.net.prod.hosts.ooklaserver.net:8080",
+          "id": "50467",
+          "kind": "ookla",
+          "name": "Verizon Tokyo",
+          "upload": true
+        },
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket Tokyo",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://tyo.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Tokyo",
+          "upload": false,
+          "url": "https://hnd-jp-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "fdcservers",
+          "asn": "30058",
+          "browser": false,
+          "host": "speedtest.hnd.fdcservers.net:8080",
+          "id": "28910",
+          "kind": "ookla",
+          "name": "fdcservers Tokyo",
+          "upload": true
+        },
+        {
+          "as_name": "icscoe-as",
+          "asn": "63770",
+          "browser": false,
+          "host": "speed.udx.icscoe.jp:8080",
+          "id": "48463",
+          "kind": "ookla",
+          "name": "IPA CyberLab 400G",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Tokyo",
+          "upload": false,
+          "url": "https://speedtest.tokyo2.linode.com/100MB-tokyo2.bin"
+        }
+      ],
+      "name": "Tokyo"
     },
     {
-      "name": "Seoul",
       "endpoints": [
-        {"name": "kdatacenter", "kind": "ookla", "id": "48402", "host": "speedtest.kdatacenter.com:8080", "browser": true, "upload": true},
-        {"name": "Vultr Seoul", "kind": "file", "url": "https://sel-kor-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Kakao mirror", "kind": "file", "url": "https://mirror.kakao.com/ubuntu/ls-lR.gz", "browser": false, "upload": false, "note": "Seoul DC mirror, ranged HTTPS, small file — CLI latency/download fallback"}
-      ]
+        {
+          "as_name": "daou-as-kr",
+          "asn": "45996",
+          "browser": true,
+          "host": "speedtest.kdatacenter.com:8080",
+          "id": "48402",
+          "kind": "ookla",
+          "name": "kdatacenter",
+          "upload": true
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Seoul",
+          "upload": false,
+          "url": "https://sel-kor-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "daum-as-kr",
+          "asn": "7625",
+          "browser": false,
+          "kind": "file",
+          "name": "Kakao mirror",
+          "note": "Seoul DC mirror, ranged HTTPS, small file — CLI latency/download fallback",
+          "upload": false,
+          "url": "https://mirror.kakao.com/ubuntu/ls-lR.gz"
+        }
+      ],
+      "name": "Seoul"
     },
     {
-      "name": "Hong Kong",
       "endpoints": [
-        {"name": "Sun Mobile", "kind": "ookla", "id": "60178", "host": "sunmobile.hkspeedtest.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "Club SIM by HKT", "kind": "ookla", "id": "60177", "host": "hkt.hkspeedtest.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "DataPacket Hong Kong", "kind": "file", "url": "https://hkg.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false},
-        {"name": "HKBN", "kind": "ookla", "id": "65463", "host": "speedtest21.hkbn.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "HKIX", "kind": "ookla", "id": "61296", "host": "speedtest1c.hkix.net.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true}
-      ]
+        {
+          "as_name": "hkcsl-as-a",
+          "asn": "38819",
+          "browser": true,
+          "host": "sunmobile.hkspeedtest.com.prod.hosts.ooklaserver.net:8080",
+          "id": "60178",
+          "kind": "ookla",
+          "name": "Sun Mobile",
+          "upload": true
+        },
+        {
+          "as_name": "hkcsl-as-a",
+          "asn": "38819",
+          "browser": true,
+          "host": "hkt.hkspeedtest.com.prod.hosts.ooklaserver.net:8080",
+          "id": "60177",
+          "kind": "ookla",
+          "name": "Club SIM by HKT",
+          "upload": true
+        },
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket Hong Kong",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://hkg.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "hkbn-as-ap",
+          "asn": "9269",
+          "browser": false,
+          "host": "speedtest21.hkbn.net.prod.hosts.ooklaserver.net:8080",
+          "id": "65463",
+          "kind": "ookla",
+          "name": "HKBN",
+          "upload": true
+        },
+        {
+          "as_name": "hkix-as-ap",
+          "asn": "4641",
+          "browser": false,
+          "host": "speedtest1c.hkix.net.prod.hosts.ooklaserver.net:8080",
+          "id": "61296",
+          "kind": "ookla",
+          "name": "HKIX",
+          "upload": true
+        }
+      ],
+      "name": "Hong Kong"
     },
     {
-      "name": "Bangkok",
       "endpoints": [
-        {"name": "AIS Fibre", "kind": "ookla", "id": "36978", "host": "tlssp1.myaisfibre.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "UIH", "kind": "ookla", "id": "18487", "host": "sp1.uih.cloud.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "TrueMove H", "kind": "ookla", "id": "1219", "host": "spd-bkk.trueinternet.co.th:8080", "browser": false, "upload": true},
-        {"name": "BKNIX", "kind": "librespeed", "url": "https://speedtest.bknix.co.th/speedtest/backend", "browser": false, "upload": true, "note": "no CORS — CLI/probe use only; prime candidate for Rotko self-hosted probe"}
-      ]
+        {
+          "as_name": "ais-fibre-",
+          "asn": "133481",
+          "browser": true,
+          "host": "tlssp1.myaisfibre.com.prod.hosts.ooklaserver.net:8080",
+          "id": "36978",
+          "kind": "ookla",
+          "name": "AIS Fibre",
+          "upload": true
+        },
+        {
+          "as_name": "uih-bbb-as",
+          "asn": "38794",
+          "browser": false,
+          "host": "sp1.uih.cloud.prod.hosts.ooklaserver.net:8080",
+          "id": "18487",
+          "kind": "ookla",
+          "name": "UIH",
+          "upload": true
+        },
+        {
+          "as_name": "realmove-a",
+          "asn": "132061",
+          "browser": false,
+          "host": "spd-bkk.trueinternet.co.th:8080",
+          "id": "1219",
+          "kind": "ookla",
+          "name": "TrueMove H",
+          "upload": true
+        },
+        {
+          "as_name": "bknix-as-a",
+          "asn": "63528",
+          "browser": false,
+          "kind": "librespeed",
+          "name": "BKNIX",
+          "note": "no CORS — CLI/probe use only; prime candidate for Rotko self-hosted probe",
+          "upload": true,
+          "url": "https://speedtest.bknix.co.th/speedtest/backend"
+        }
+      ],
+      "name": "Bangkok"
     },
     {
-      "name": "Singapore",
       "endpoints": [
-        {"name": "Pacific Internet", "kind": "ookla", "id": "31293", "host": "speedtest2.pacificinternet.com.prod.hosts.ooklaserver.net:8080", "browser": true, "upload": true},
-        {"name": "DataPacket Singapore", "kind": "file", "url": "https://sin.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false},
-        {"name": "Vultr Singapore", "kind": "file", "url": "https://sgp-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "MyRepublic", "kind": "ookla", "id": "5935", "host": "speedtest.myrepublic.com.sg:8080", "browser": false, "upload": true},
-        {"name": "M1 Limited", "kind": "ookla", "id": "7311", "host": "m1speedtest1.m1net.com.sg:8080", "browser": false, "upload": true},
-        {"name": "Linode Singapore", "kind": "file", "url": "https://speedtest.singapore.linode.com/100MB-singapore.bin", "browser": false, "upload": false},
-        {"name": "OVH Singapore", "kind": "file", "url": "https://sgp.proof.ovh.net/files/100Mb.dat", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "pacificint",
+          "asn": "4628",
+          "browser": true,
+          "host": "speedtest2.pacificinternet.com.prod.hosts.ooklaserver.net:8080",
+          "id": "31293",
+          "kind": "ookla",
+          "name": "Pacific Internet",
+          "upload": true
+        },
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket Singapore",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://sin.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Singapore",
+          "upload": false,
+          "url": "https://sgp-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "republicte",
+          "asn": "132132",
+          "browser": false,
+          "host": "speedtest.myrepublic.com.sg:8080",
+          "id": "5935",
+          "kind": "ookla",
+          "name": "MyRepublic",
+          "upload": true
+        },
+        {
+          "as_name": "mobileonel",
+          "asn": "4773",
+          "browser": false,
+          "host": "m1speedtest1.m1net.com.sg:8080",
+          "id": "7311",
+          "kind": "ookla",
+          "name": "M1 Limited",
+          "upload": true
+        },
+        {
+          "as_name": "akamai-lin",
+          "asn": "63949",
+          "browser": false,
+          "kind": "file",
+          "name": "Linode Singapore",
+          "upload": false,
+          "url": "https://speedtest.singapore.linode.com/100MB-singapore.bin"
+        },
+        {
+          "as_name": "ovh",
+          "asn": "16276",
+          "browser": false,
+          "kind": "file",
+          "name": "OVH Singapore",
+          "upload": false,
+          "url": "https://sgp.proof.ovh.net/files/100Mb.dat"
+        }
+      ],
+      "name": "Singapore"
     },
     {
-      "name": "Sydney",
       "endpoints": [
-        {"name": "Telstra", "kind": "ookla", "id": "12492", "host": "syd1.speedtest.telstra.net:8080", "browser": true, "upload": true},
-        {"name": "DataPacket Sydney", "kind": "file", "url": "https://syd.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false},
-        {"name": "Vultr Sydney", "kind": "file", "url": "https://syd-au-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Optus", "kind": "ookla", "id": "1267", "host": "speedtest-sydney.optusnet.com.au:8080", "browser": false, "upload": true},
-        {"name": "AARNet", "kind": "ookla", "id": "6355", "host": "nsw-brwy-st1.speedtest.aarnet.net.au:8080", "browser": false, "upload": true},
-        {"name": "OVH Sydney", "kind": "file", "url": "https://syd.proof.ovh.net/files/100Mb.dat", "browser": false, "upload": false}
-      ]
+        {
+          "as_name": "asn-telstr",
+          "asn": "1221",
+          "browser": true,
+          "host": "syd1.speedtest.telstra.net:8080",
+          "id": "12492",
+          "kind": "ookla",
+          "name": "Telstra",
+          "upload": true
+        },
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket Sydney",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://syd.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr Sydney",
+          "upload": false,
+          "url": "https://syd-au-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "mpx-as",
+          "asn": "4804",
+          "browser": false,
+          "host": "speedtest-sydney.optusnet.com.au:8080",
+          "id": "1267",
+          "kind": "ookla",
+          "name": "Optus",
+          "upload": true
+        },
+        {
+          "as_name": "aarnet-as-",
+          "asn": "7575",
+          "browser": false,
+          "host": "nsw-brwy-st1.speedtest.aarnet.net.au:8080",
+          "id": "6355",
+          "kind": "ookla",
+          "name": "AARNet",
+          "upload": true
+        },
+        {
+          "as_name": "ovh",
+          "asn": "16276",
+          "browser": false,
+          "kind": "file",
+          "name": "OVH Sydney",
+          "upload": false,
+          "url": "https://syd.proof.ovh.net/files/100Mb.dat"
+        }
+      ],
+      "name": "Sydney"
     },
     {
-      "name": "Dubai",
       "endpoints": [
-        {"name": "DataPacket Fujairah", "kind": "file", "url": "https://fjr.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false, "note": "Fujairah, ~110 km from Dubai — only CORS-enabled UAE endpoint"},
-        {"name": "du", "kind": "ookla", "id": "69177", "host": "dxbsouth.speedtest.du.ae.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "e& UAE", "kind": "ookla", "id": "17336", "host": "speedtest1.etisalat.ae:8080", "browser": false, "upload": true},
-        {"name": "EDIS Global Dubai", "kind": "file", "url": "https://ae.edisglobal.com/100MB.test", "browser": false, "upload": false, "note": "geo-confirmed Dubai; no CORS — CLI only; probe candidate city"}
-      ]
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket Fujairah",
+          "note": "Fujairah, ~110 km from Dubai — only CORS-enabled UAE endpoint",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://fjr.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "du-as1",
+          "asn": "15802",
+          "browser": false,
+          "host": "dxbsouth.speedtest.du.ae.prod.hosts.ooklaserver.net:8080",
+          "id": "69177",
+          "kind": "ookla",
+          "name": "du",
+          "upload": true
+        },
+        {
+          "as_name": "emirates-i",
+          "asn": "5384",
+          "browser": false,
+          "host": "speedtest1.etisalat.ae:8080",
+          "id": "17336",
+          "kind": "ookla",
+          "name": "e\u0026 UAE",
+          "upload": true
+        },
+        {
+          "as_name": "m247",
+          "asn": "9009",
+          "browser": false,
+          "kind": "file",
+          "name": "EDIS Global Dubai",
+          "note": "geo-confirmed Dubai; no CORS — CLI only; probe candidate city",
+          "upload": false,
+          "url": "https://ae.edisglobal.com/100MB.test"
+        }
+      ],
+      "name": "Dubai"
     },
     {
-      "name": "São Paulo",
       "endpoints": [
-        {"name": "DataPacket São Paulo", "kind": "file", "url": "https://sao.download.datapacket.com/100mb.bin", "browser": true, "timing_allow_origin": true, "upload": false},
-        {"name": "Vultr São Paulo", "kind": "file", "url": "https://sao-br-ping.vultr.com/vultr.com.100MB.bin", "browser": true, "upload": false},
-        {"name": "Vtal", "kind": "ookla", "id": "40465", "host": "speedtestsp.vtal.net.br.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "EdgeUno", "kind": "ookla", "id": "29666", "host": "spt-sao1.edgeuno.com.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true},
-        {"name": "Mais Fibra", "kind": "ookla", "id": "16347", "host": "speedtest.maisfibranet.net.br.prod.hosts.ooklaserver.net:8080", "browser": false, "upload": true}
-      ]
+        {
+          "as_name": "cdn77",
+          "asn": "60068",
+          "browser": true,
+          "kind": "file",
+          "name": "DataPacket São Paulo",
+          "timing_allow_origin": true,
+          "upload": false,
+          "url": "https://sao.download.datapacket.com/100mb.bin"
+        },
+        {
+          "as_name": "as-vultr",
+          "asn": "20473",
+          "browser": true,
+          "kind": "file",
+          "name": "Vultr São Paulo",
+          "upload": false,
+          "url": "https://sao-br-ping.vultr.com/vultr.com.100MB.bin"
+        },
+        {
+          "as_name": "as7738",
+          "asn": "7738",
+          "browser": false,
+          "host": "speedtestsp.vtal.net.br.prod.hosts.ooklaserver.net:8080",
+          "id": "40465",
+          "kind": "ookla",
+          "name": "Vtal",
+          "upload": true
+        },
+        {
+          "as_name": "as7195",
+          "asn": "7195",
+          "browser": false,
+          "host": "spt-sao1.edgeuno.com.prod.hosts.ooklaserver.net:8080",
+          "id": "29666",
+          "kind": "ookla",
+          "name": "EdgeUno",
+          "upload": true
+        },
+        {
+          "as_name": "as271740",
+          "asn": "271740",
+          "browser": false,
+          "host": "speedtest.maisfibranet.net.br.prod.hosts.ooklaserver.net:8080",
+          "id": "16347",
+          "kind": "ookla",
+          "name": "Mais Fibra",
+          "upload": true
+        }
+      ],
+      "name": "São Paulo"
     }
-  ]
+  ],
+  "verified": "2026-07-15",
+  "version": 1
 }
