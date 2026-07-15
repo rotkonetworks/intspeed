@@ -30,6 +30,7 @@ type Options struct {
 	BrowserOnly   bool          // restrict to CORS-open endpoints (set by the wasm build)
 	OpTimeout     time.Duration // timeout per single measurement
 	Locations     []string      // subset filter; empty = all
+	MaxEndpoints  int           // cap endpoints latency-tested per city; 0 = all
 }
 
 func (o *Options) defaults() {
@@ -122,6 +123,27 @@ func testLocation(ctx context.Context, loc endpoints.LocationEndpoints, opts Opt
 	if len(eps) == 0 {
 		res.Error = "no usable endpoints"
 		return res
+	}
+	if opts.MaxEndpoints > 0 && len(eps) > opts.MaxEndpoints {
+		// Registry order is roughly best-first per city; make sure at least
+		// one upload-capable endpoint survives the cut.
+		cut := append([]endpoints.Endpoint(nil), eps[:opts.MaxEndpoints]...)
+		hasUp := false
+		for _, e := range cut {
+			if e.Upload {
+				hasUp = true
+				break
+			}
+		}
+		if !hasUp {
+			for _, e := range eps[opts.MaxEndpoints:] {
+				if e.Upload {
+					cut[len(cut)-1] = e
+					break
+				}
+			}
+		}
+		eps = cut
 	}
 
 	// Latency on every endpoint; the fastest ones win the throughput tests.

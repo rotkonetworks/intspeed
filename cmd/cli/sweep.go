@@ -18,12 +18,13 @@ import (
 )
 
 var (
-	sweepDownloadMB int64
-	sweepUploadMB   int64
-	sweepPings      int
-	sweepLocations  string
-	sweepJSON       bool
-	sweepASPath     bool
+	sweepDownloadMB   int64
+	sweepUploadMB     int64
+	sweepPings        int
+	sweepLocations    string
+	sweepJSON         bool
+	sweepASPath       bool
+	sweepMaxEndpoints int
 )
 
 func newSweepCmd() *cobra.Command {
@@ -38,6 +39,7 @@ func newSweepCmd() *cobra.Command {
 	cmd.Flags().StringVar(&sweepLocations, "locations", "", "Comma-separated subset of locations (default: all)")
 	cmd.Flags().BoolVar(&sweepJSON, "json", false, "Print raw JSON results to stdout")
 	cmd.Flags().BoolVar(&sweepASPath, "aspath", true, "Trace AS-level path per location (needs root/CAP_NET_RAW)")
+	cmd.Flags().IntVar(&sweepMaxEndpoints, "max-endpoints", 0, "Max endpoints latency-tested per city (0 = all)")
 	return cmd
 }
 
@@ -51,6 +53,7 @@ func runSweep(cmd *cobra.Command, args []string) {
 		DownloadBytes: sweepDownloadMB * 1_000_000,
 		UploadBytes:   sweepUploadMB * 1_000_000,
 		PingCount:     sweepPings,
+		MaxEndpoints:  sweepMaxEndpoints,
 	}
 	if sweepLocations != "" {
 		opts.Locations = strings.Split(sweepLocations, ",")
