@@ -11,21 +11,21 @@ import (
 )
 
 type TestResults struct {
-	UserInfo  *extspeedtest.User      `json:"user_info"`
-	Tests     []speedtest.Result      `json:"tests"`
-	Timestamp time.Time               `json:"timestamp"`
-	Version   string                  `json:"version"`
+	UserInfo  *extspeedtest.User `json:"user_info"`
+	Tests     []speedtest.Result `json:"tests"`
+	Timestamp time.Time          `json:"timestamp"`
+	Version   string             `json:"version"`
 }
 
 type Stats struct {
-	Total         int                 `json:"total"`
-	Successful    int                 `json:"successful"`
-	SuccessRate   float64             `json:"success_rate"`
-	AvgLatency    float64             `json:"avg_latency"`
-	AvgDownload   float64             `json:"avg_download"`
-	AvgUpload     float64             `json:"avg_upload"`
-	BestLatency   *speedtest.Result   `json:"best_latency"`
-	BestDownload  *speedtest.Result   `json:"best_download"`
+	Total        int               `json:"total"`
+	Successful   int               `json:"successful"`
+	SuccessRate  float64           `json:"success_rate"`
+	AvgLatency   float64           `json:"avg_latency"`
+	AvgDownload  float64           `json:"avg_download"`
+	AvgUpload    float64           `json:"avg_upload"`
+	BestLatency  *speedtest.Result `json:"best_latency"`
+	BestDownload *speedtest.Result `json:"best_download"`
 }
 
 func (r *TestResults) SortByLatency() {

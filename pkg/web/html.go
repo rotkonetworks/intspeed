@@ -9,11 +9,11 @@ import (
 
 func GenerateHTML(testResults *results.TestResults) string {
 	stats := testResults.GetStats()
-	
+
 	// Convert results to JSON for JavaScript
 	jsonData, _ := json.Marshal(testResults.Tests)
 	jsonStats, _ := json.Marshal(stats)
-	
+
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,7 +95,7 @@ func GenerateHTML(testResults *results.TestResults) string {
         const tbody = document.getElementById('resultsTableBody');
         testData.forEach(test => {
             const row = tbody.insertRow();
-            row.innerHTML = ` + "`" + `
+            row.innerHTML = `+"`"+`
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="text-sm font-medium text-gray-900">${test.location.name}</div>
                     <div class="text-sm text-gray-500">${test.location.region}</div>
@@ -114,7 +114,7 @@ func GenerateHTML(testResults *results.TestResults) string {
                         ${test.success ? 'Success' : 'Failed'}
                     </span>
                 </td>
-            ` + "`" + `;
+            `+"`"+`;
         });
 
         // Speed Chart

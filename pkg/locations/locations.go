@@ -18,21 +18,22 @@ var GlobalLocations = []Location{
 	{"Chicago", "US", 41.8781, -87.6298, "Industrial Hub", "North America"},
 	{"Toronto", "CA", 43.6532, -79.3832, "Financial Center", "North America"},
 	{"Vancouver", "CA", 49.2827, -123.1207, "Tech Hub", "North America"},
-	
+
 	// Europe
 	{"London", "GB", 51.5074, -0.1278, "Financial Capital", "Europe"},
 	{"Frankfurt", "DE", 50.1109, 8.6821, "Internet Exchange", "Europe"},
 	{"Amsterdam", "NL", 52.3676, 4.9041, "Data Center Hub", "Europe"},
 	{"Stockholm", "SE", 59.3293, 18.0686, "Nordic Tech Hub", "Europe"},
 	{"Paris", "FR", 48.8566, 2.3522, "Cultural Center", "Europe"},
-	
-	// Asia-Pacific  
+
+	// Asia-Pacific
 	{"Tokyo", "JP", 35.6762, 139.6503, "Tech Innovation", "Asia-Pacific"},
 	{"Seoul", "KR", 37.5665, 126.9780, "Gaming Capital", "Asia-Pacific"},
 	{"Singapore", "SG", 1.3521, 103.8198, "SE Asia Hub", "Asia-Pacific"},
 	{"Hong Kong", "HK", 22.3193, 114.1694, "Financial Hub", "Asia-Pacific"},
+	{"Bangkok", "TH", 13.7563, 100.5018, "SE Asia Gateway", "Asia-Pacific"},
 	{"Sydney", "AU", -33.8688, 151.2093, "Pacific Hub", "Asia-Pacific"},
-	
+
 	// Others
 	{"Dubai", "AE", 25.2048, 55.2708, "Middle East Hub", "Middle East"},
 	{"São Paulo", "BR", -23.5505, -46.6333, "Economic Hub", "South America"},

@@ -19,11 +19,11 @@ import (
 const version = "2.0.0"
 
 var (
-	outputDir     string
-	threads       int
-	timeout       int
-	verbose       bool
-	generateHTML  bool
+	outputDir    string
+	threads      int
+	timeout      int
+	verbose      bool
+	generateHTML bool
 )
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 		Run:   generateHTMLReport,
 	}
 
-	rootCmd.AddCommand(testCmd, locationsCmd, htmlCmd)
+	rootCmd.AddCommand(testCmd, locationsCmd, htmlCmd, newSweepCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
@@ -98,7 +98,7 @@ func runTest(cmd *cobra.Command, args []string) {
 	// Test each location sequentially
 	for i, location := range locations.GlobalLocations {
 		fmt.Printf("🔍 [%d/%d] Testing %s...\n", i+1, len(locations.GlobalLocations), location.Name)
-		
+
 		result := client.TestLocation(context.Background(), location)
 		testResults.Tests = append(testResults.Tests, result)
 
@@ -126,7 +126,7 @@ func runTest(cmd *cobra.Command, args []string) {
 	// Save results
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
 	filename := filepath.Join(outputDir, fmt.Sprintf("results_%s.json", timestamp))
-	
+
 	if err := testResults.Save(filename); err != nil {
 		log.Fatalf("save results: %v", err)
 	}
@@ -143,7 +143,7 @@ func runTest(cmd *cobra.Command, args []string) {
 	if stats.Successful > 0 {
 		fmt.Printf("📊 Avg: %.1fms, ↓%.1f Mbps, ↑%.1f Mbps\n",
 			stats.AvgLatency, stats.AvgDownload, stats.AvgUpload)
-		
+
 		if stats.BestLatency != nil {
 			fmt.Printf("🏆 Best latency: %s → %s (%.1fms)\n",
 				stats.BestLatency.Location.Name, stats.BestLatency.ServerCity(), stats.BestLatency.Latency())
@@ -167,7 +167,7 @@ func runTest(cmd *cobra.Command, args []string) {
 
 func listLocations(cmd *cobra.Command, args []string) {
 	fmt.Printf("🌍 Global Test Locations (%d total)\n\n", len(locations.GlobalLocations))
-	
+
 	regions := locations.GetByRegion()
 	for _, region := range locations.GetRegions() {
 		fmt.Printf("📍 %s:\n", region)
@@ -193,7 +193,7 @@ func generateHTMLReport(cmd *cobra.Command, args []string) {
 
 	html := web.GenerateHTML(testResults)
 	htmlFile := strings.TrimSuffix(filename, ".json") + ".html"
-	
+
 	if err := os.WriteFile(htmlFile, []byte(html), 0644); err != nil {
 		log.Fatalf("save HTML: %v", err)
 	}

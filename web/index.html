@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.bunny.net/css?family=inter:400,500,600|jetbrains-mono:400,500,700">
+<title>intspeed - International Speedtest | Rotko Networks</title>
+<meta name="description" content="Measure your real international connectivity from your browser to 18 cities worldwide. Domestic speedtests lie; transit doesn't.">
+<link rel="icon" href="rotko-icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #0a0f1c; --term: #0a0e14; --border: #1f2937; --border-soft: #16203a;
+    --fg: #e6e9ee; --body: #94a3b8; --dim: #64748b;
+    --cyan: #22d3ee; --cyan-soft: #67e8f9; --teal: #155e75;
+    --green: #4ade80; --yellow: #facc15; --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--body);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 1.25rem; }
+
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 0 2.5rem; }
+  nav .brand img { height: 30px; width: auto; display: block; }
+  nav .links { font-size: .8rem; }
+  nav .links a { color: var(--body); text-decoration: none; margin-left: 1.25rem; }
+  nav .links a:hover { color: var(--cyan); }
+  nav .links span { color: var(--dim); margin-left: 1.25rem; }
+
+  .intro { margin-bottom: 1.5rem; font-size: .85rem; }
+  .intro .cmd { color: var(--fg); font-weight: 500; }
+  .intro .cmd b { color: var(--cyan); font-weight: 700; }
+  .intro p { color: var(--dim); margin-top: .25rem; }
+
+  .term {
+    background: var(--term); border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .6rem .9rem; border-bottom: 1px solid var(--border-soft);
+  }
+  .term-bar .dot { width: 10px; height: 10px; border-radius: 50%; background: #1f2937; }
+  .term-bar .title { color: var(--dim); font-size: .75rem; margin-left: .5rem; flex: 1; }
+  .pill {
+    font-size: .7rem; padding: .05rem .6rem; border-radius: 999px; border: 1px solid var(--border);
+    color: var(--dim);
+  }
+  .pill.ready   { border-color: #164e63; color: var(--cyan); }
+  .pill.running { border-color: #713f12; color: var(--yellow); }
+  .pill.done    { border-color: #14532d; color: var(--green); }
+  .pill.error   { border-color: #7f1d1d; color: var(--red); }
+
+  .term-body { padding: 1rem 1.1rem 1.1rem; min-height: 12rem; }
+  .prompt-row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .75rem; }
+  .prompt-row .ps1 { color: var(--green); font-weight: 700; }
+  .prompt-row .fixed { color: var(--fg); }
+  select {
+    background: transparent; color: var(--cyan); border: 0; border-bottom: 1px dashed var(--border);
+    font: inherit; padding: 0 .1rem .05rem; cursor: pointer;
+  }
+  select:focus { outline: none; border-bottom-color: var(--cyan); }
+  select option { background: var(--term); }
+  button.run {
+    background: transparent; color: var(--green); border: 1px solid #14532d; border-radius: 4px;
+    font: inherit; font-weight: 700; padding: .05rem .8rem; cursor: pointer;
+  }
+  button.run:hover:not(:disabled) { background: #052e16; }
+  button.run:disabled { color: var(--dim); border-color: var(--border); cursor: default; }
+
+  #out { white-space: pre-wrap; word-break: break-word; }
+  #out .l-loc  { color: var(--fg); }
+  #out .l-ping { color: var(--yellow); }
+  #out .l-down { color: var(--cyan); }
+  #out .l-up   { color: var(--cyan-soft); }
+  #out .l-dim  { color: var(--dim); }
+  #out .l-err  { color: var(--red); }
+  #out .l-ok   { color: var(--green); }
+  .cursor::after { content: '▊'; color: var(--cyan); animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .chart-card {
+    background: var(--term); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.25rem; margin-bottom: 1.5rem;
+  }
+  #chart svg { width: 100%; height: auto; display: block; }
+  .chart-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: .75rem; font-size: .75rem; color: var(--dim); }
+  .chart-foot a { color: var(--cyan); text-decoration: none; cursor: pointer; }
+  .chart-foot a:hover { color: var(--cyan-soft); }
+  .hidden { display: none; }
+
+  footer { padding: 1rem 0 3rem; font-size: .75rem; color: var(--dim); }
+  footer a { color: var(--body); text-decoration: none; }
+  footer a:hover { color: var(--cyan); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="https://rotko.net" title="Rotko Networks"><img src="rotko-logo.svg" alt="Rotko Networks"></a>
+    <span class="links">
+      <a href="https://github.com/rotkonetworks/intspeed">github</a>
+      <a href="https://rotko.net">rotko.net</a>
+      <span>AS142108 · BKK</span>
+    </span>
+  </nav>
+
+  <div class="intro">
+    <div class="cmd"><b>intspeed</b> — international speedtest, from your browser to 18 cities</div>
+    <p>domestic speedtests lie; the server is down the street. international transit is what you pay for.</p>
+  </div>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="title">intspeed @ browser — go/wasm</span>
+      <span class="pill" id="pill">loading</span>
+    </div>
+    <div class="term-body">
+      <div class="prompt-row">
+        <span class="ps1">$</span>
+        <span class="fixed">intspeed sweep --mode</span>
+        <select id="mode">
+          <option value="5,2">quick</option>
+          <option value="10,4" selected>standard</option>
+          <option value="25,10">thorough</option>
+        </select>
+        <span class="l-dim" id="modeHint">10MB↓ 4MB↑ per city</span>
+        <button class="run" id="start" disabled>run ⏎</button>
+      </div>
+      <div id="out"><span class="l-dim">fetching wasm engine…</span></div>
+    </div>
+  </div>
+
+  <div id="chartPanel" class="hidden">
+    <div class="chart-card">
+      <div id="chart"></div>
+      <div class="chart-foot">
+        <span class="mono" id="stamp"></span>
+        <span><a id="dl">export json</a> · screenshot this and send it to your provider</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    measurements run client-side (go → wasm) against verified public endpoints in each city ·
+    results vary with time of day and remote load — run it a few times ·
+    cli: <a href="https://github.com/rotkonetworks/intspeed">github.com/rotkonetworks/intspeed</a> ·
+    <a href="https://rotko.net">rotko networks</a>, bangkok
+  </footer>
+</div>
+
+<script src="wasm_exec.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const out = $('#out');
+const MODE_HINT = { '5,2': '5MB↓ 2MB↑ per city', '10,4': '10MB↓ 4MB↑ per city', '25,10': '25MB↓ 10MB↑ per city' };
+const EST_PER_CITY = { '5,2': 11, '10,4': 16, '25,10': 32 }; // seconds, refined while running
+
+let finalResults = null;
+let lines = {};        // location -> line element
+let curLine = null;    // element being updated
+let run = null;        // { start, total, done, timer }
+
+const pad = (s, n) => String(s).padEnd(n);
+const fmtEta = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+function setPill(cls, text) { const p = $('#pill'); p.className = 'pill ' + cls; p.textContent = text; }
+
+function line(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  out.appendChild(div);
+  return div;
+}
+
+function eta() {
+  if (!run) return 0;
+  const elapsed = (Date.now() - run.start) / 1000;
+  const per = run.done > 0 ? elapsed / run.done : run.estPerCity;
+  return per * run.total - elapsed;
+}
+
+function tick() {
+  if (!run || !curLine) return;
+  const e = curLine.querySelector('.eta');
+  if (e) e.textContent = `eta ${fmtEta(eta())}`;
+}
+
+function onEvent(json) {
+  const e = JSON.parse(json);
+  switch (e.type) {
+    case 'location_start': {
+      run.total = e.total;
+      const name = e.location.toLowerCase();
+      curLine = line(
+        `<span class="l-dim">[${String(e.index).padStart(2)}/${e.total}]</span> ` +
+        `<span class="l-loc">${pad(name, 13)}</span>` +
+        `<span class="l-dim">testing… </span><span class="eta l-dim">eta ${fmtEta(eta())}</span>`
+      );
+      lines[e.location] = curLine;
+      curLine.dataset.idx = `[${String(e.index).padStart(2)}/${e.total}]`;
+      curLine.dataset.name = name;
+      curLine.dataset.state = '';
+      break;
+    }
+    case 'latency': {
+      const l = lines[e.location]; if (!l) break;
+      l.dataset.ping = e.value;
+      renderLine(l, `<span class="l-dim">↓ …</span> <span class="eta l-dim">eta ${fmtEta(eta())}</span>`);
+      break;
+    }
+    case 'download': {
+      const l = lines[e.location]; if (!l) break;
+      l.dataset.down = e.value; l.dataset.via = e.endpoint.toLowerCase();
+      renderLine(l, `<span class="l-dim">↑ …</span> <span class="eta l-dim">eta ${fmtEta(eta())}</span>`);
+      break;
+    }
+    case 'upload': {
+      const l = lines[e.location]; if (!l) break;
+      l.dataset.up = e.value;
+      renderLine(l, '');
+      break;
+    }
+    case 'location_done': {
+      run.done = e.index;
+      const l = lines[e.location]; if (!l) break;
+      if (e.error) {
+        renderLine(l, `<span class="l-err">✗ ${e.error}</span>`);
+      } else {
+        renderLine(l, `<span class="l-dim">${l.dataset.via || ''}</span>`);
+      }
+      curLine = null;
+      break;
+    }
+    case 'final': {
+      finalResults = e.results;
+      clearInterval(run.timer); run = null;
+      const ok = e.results.filter(r => r.latency_ms > 0);
+      if (ok.length) {
+        const avg = k => ok.reduce((s, r) => s + r[k], 0) / ok.length;
+        const best = ok.reduce((a, b) => a.latency_ms < b.latency_ms ? a : b);
+        const worst = ok.reduce((a, b) => a.latency_ms > b.latency_ms ? a : b);
+        line('&nbsp;');
+        line(`<span class="l-ok">✓ done</span> <span class="l-dim">·</span> ` +
+          `avg <span class="l-down">↓${avg('download_mbps').toFixed(1)}</span> ` +
+          `<span class="l-up">↑${avg('upload_mbps').toFixed(1)}</span> mbps ` +
+          `<span class="l-dim">· nearest</span> <span class="l-loc">${best.location.toLowerCase()}</span> <span class="l-ping">${best.latency_ms.toFixed(0)}ms</span> ` +
+          `<span class="l-dim">· farthest</span> <span class="l-loc">${worst.location.toLowerCase()}</span> <span class="l-ping">${worst.latency_ms.toFixed(0)}ms</span>`);
+        line(`<span class="l-dim">chart rendered below ↓</span>`);
+      }
+      const c = line('<span class="cursor"></span>');
+      drawChart(e.results);
+      $('#stamp').textContent = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC · intspeed.rotko.net';
+      setPill('done', 'done');
+      $('#start').disabled = false;
+      c.scrollIntoView({ block: 'nearest' });
+      break;
+    }
+    case 'fatal':
+      clearInterval(run?.timer); run = null;
+      line(`<span class="l-err">✗ ${e.error}</span>`);
+      setPill('error', 'error');
+      $('#start').disabled = false;
+      break;
+  }
+}
+
+// Rebuild a city line from its accumulated data + a trailing segment.
+function renderLine(l, tail) {
+  const ping = l.dataset.ping ? `<span class="l-ping">${pad(parseFloat(l.dataset.ping).toFixed(1) + 'ms', 9)}</span>` : pad('', 9);
+  const down = l.dataset.down ? `<span class="l-down">${pad('↓ ' + parseFloat(l.dataset.down).toFixed(1), 9)}</span>` : '';
+  const up   = l.dataset.up   ? `<span class="l-up">${pad('↑ ' + parseFloat(l.dataset.up).toFixed(1), 9)}</span>` : '';
+  l.innerHTML = `<span class="l-dim">${l.dataset.idx}</span> <span class="l-loc">${pad(l.dataset.name, 13)}</span>${ping}${down}${up}${tail}`;
+}
+
+function startSweep() {
+  $('#start').disabled = true;
+  $('#chartPanel').classList.add('hidden');
+  out.innerHTML = '';
+  lines = {}; curLine = null;
+  const mode = $('#mode').value;
+  const [d, u] = mode.split(',').map(Number);
+  const total = JSON.parse(intspeedLocations()).length;
+  line(`<span class="l-dim">registry 2026-07-15 · ${total} cities · browser-safe endpoints</span>`);
+  line('&nbsp;');
+  run = { start: Date.now(), total, done: 0, estPerCity: EST_PER_CITY[mode], timer: setInterval(tick, 1000) };
+  setPill('running', 'running');
+  intspeedStart(onEvent, JSON.stringify({ downloadMB: d, uploadMB: u }));
+}
+
+function drawChart(results) {
+  const ok = results.filter(r => r.latency_ms > 0)
+    .slice().sort((a, b) => a.latency_ms - b.latency_ms);
+  if (!ok.length) return;
+
+  const W = 1020, H = 470;
+  const m = { top: 56, right: 16, bottom: 96, left: 52 };
+  const plotW = W - m.left - m.right, plotH = H - m.top - m.bottom;
+  const maxVal = Math.max(...ok.flatMap(r => [r.download_mbps, r.upload_mbps, r.latency_ms]), 1);
+
+  const rawStep = maxVal / 5;
+  const pow = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const step = [1, 2, 2.5, 5, 10].map(x => x * pow).find(s => s >= rawStep);
+  const yMax = Math.ceil(maxVal / step) * step;
+  const y = v => m.top + plotH - v / yMax * plotH;
+
+  const group = plotW / ok.length;
+  const barW = Math.min(11, (group - 8) / 3);
+
+  const C = { down: '#22d3ee', up: '#155e75', ping: '#facc15' };
+  let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+
+  s += `<text x="${m.left}" y="20" fill="#e6e9ee" font-size="15" font-weight="700" font-family="Inter,sans-serif">International Speedtest by Rotko Networks</text>`;
+  const leg = [['download mbps', C.down], ['upload mbps', C.up], ['latency ms', C.ping]];
+  let lx = m.left;
+  leg.forEach(([label, color]) => {
+    s += `<rect x="${lx}" y="32" width="10" height="10" rx="2" fill="${color}"/>`;
+    s += `<text x="${lx + 15}" y="41" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace">${label}</text>`;
+    lx += 15 + label.length * 6.6 + 26;
+  });
+
+  for (let v = 0; v <= yMax; v += step) {
+    s += `<line x1="${m.left}" y1="${y(v)}" x2="${W - m.right}" y2="${y(v)}" stroke="#16203a" stroke-width="1"/>`;
+    s += `<text x="${m.left - 8}" y="${y(v) + 4}" fill="#64748b" font-size="10.5" text-anchor="end" font-family="JetBrains Mono,monospace">${v}</text>`;
+  }
+
+  ok.forEach((r, i) => {
+    const cx = m.left + group * (i + .5);
+    const bars = [[r.download_mbps, C.down], [r.upload_mbps, C.up], [r.latency_ms, C.ping]];
+    bars.forEach(([v, color], j) => {
+      const bx = cx + (j - 1.5) * barW + (j - 1) * 1;
+      const by = y(Math.max(v, 0));
+      s += `<rect x="${bx}" y="${by}" width="${barW}" height="${Math.max(1, m.top + plotH - by)}" rx="1.5" fill="${color}"/>`;
+    });
+    s += `<text x="${cx}" y="${m.top + plotH + 12}" fill="#94a3b8" font-size="11" font-family="JetBrains Mono,monospace" transform="rotate(-55 ${cx} ${m.top + plotH + 12})" text-anchor="end">${r.location.toLowerCase().replace(/\s/g, '')}</text>`;
+  });
+
+  s += `<line x1="${m.left}" y1="${m.top + plotH}" x2="${W - m.right}" y2="${m.top + plotH}" stroke="#1e293b" stroke-width="1"/>`;
+  s += `</svg>`;
+  $('#chart').innerHTML = s;
+  $('#chartPanel').classList.remove('hidden');
+}
+
+$('#mode').onchange = () => { $('#modeHint').textContent = MODE_HINT[$('#mode').value]; };
+$('#dl').onclick = () => {
+  const blob = new Blob([JSON.stringify({ timestamp: new Date().toISOString(), source: 'intspeed.rotko.net', results: finalResults }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'intspeed-results.json';
+  a.click();
+};
+$('#start').onclick = startSweep;
+
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject)
+  .catch(() => fetch('main.wasm').then(r => r.arrayBuffer()).then(b => WebAssembly.instantiate(b, go.importObject)))
+  .then(res => {
+    go.run(res.instance);
+    out.innerHTML = '';
+    line(`<span class="l-dim">engine ready · ${JSON.parse(intspeedLocations()).length} cities · press run</span>`);
+    line('<span class="cursor"></span>');
+    $('#start').disabled = false;
+    setPill('ready', 'ready');
+  })
+  .catch(err => { out.innerHTML = ''; line(`<span class="l-err">wasm load failed: ${err}</span>`); setPill('error', 'error'); });
+</script>
+</body>
+</html>

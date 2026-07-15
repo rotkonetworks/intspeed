@@ -15,42 +15,39 @@ import (
 
 func main() {
 	var port int
+	var dir string
 
 	var rootCmd = &cobra.Command{
 		Use:   "intspeed-server",
-		Short: "international speedtest web server",
+		Short: "serves the intspeed browser frontend (tests run in the visitor's browser)",
 		Run: func(cmd *cobra.Command, args []string) {
-			runServer(port)
+			runServer(port, dir)
 		},
 	}
 
 	rootCmd.Flags().IntVarP(&port, "port", "p", 8080, "Server port")
+	rootCmd.Flags().StringVarP(&dir, "dir", "d", "web", "Static assets directory")
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func runServer(port int) {
-	server := web.NewServer()
-	
+func runServer(port int, dir string) {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
-		Handler:      server.Routes(),
+		Handler:      web.StaticHandler(dir),
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
 	go func() {
-		fmt.Printf("🌐 intspeed server starting on port %d\n", port)
-		fmt.Printf("📱 Open http://localhost:%d in your browser\n", port)
-		
+		fmt.Printf("🌐 intspeed server on http://localhost:%d (serving %s)\n", port, dir)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			log.Fatalf("server error: %v", err)
 		}
 	}()
 
-	// Graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	<-c
