@@ -58,7 +58,7 @@ func main() {
 		Run:   generateHTMLReport,
 	}
 
-	rootCmd.AddCommand(testCmd, locationsCmd, htmlCmd, newSweepCmd())
+	rootCmd.AddCommand(testCmd, locationsCmd, htmlCmd, newSweepCmd(), newTraceCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)

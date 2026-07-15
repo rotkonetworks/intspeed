@@ -1,14 +1,15 @@
 //go:build !js
 
-// Package aspath implements a minimal traceroute (UDP probes, raw ICMP
-// listener) plus IP→ASN mapping via Team Cymru DNS, producing the AS-level
-// path to a host. Raw ICMP needs CAP_NET_RAW (root or setcap).
+// Package aspath implements a thin mtr: ICMP-echo traceroute with per-hop
+// RTT, reverse DNS, and IP→ASN mapping (Team Cymru DNS), producing an
+// inspectable looking-glass style path. Raw ICMP needs CAP_NET_RAW.
 package aspath
 
 import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"strings"
 	"time"
 
@@ -17,8 +18,12 @@ import (
 )
 
 type Hop struct {
-	TTL int
-	IP  string // empty when the hop didn't answer
+	TTL    int     `json:"ttl"`
+	IP     string  `json:"ip,omitempty"` // empty when the hop didn't answer
+	PTR    string  `json:"ptr,omitempty"`
+	RTTMs  float64 `json:"rtt_ms,omitempty"`
+	ASN    string  `json:"asn,omitempty"`
+	ASName string  `json:"as_name,omitempty"`
 }
 
 type AS struct {
@@ -29,28 +34,26 @@ type AS struct {
 // ErrNoPermission is returned when the raw ICMP socket cannot be opened.
 var ErrNoPermission = fmt.Errorf("raw ICMP socket requires root or CAP_NET_RAW")
 
-// Trace runs a UDP traceroute toward host. One probe per TTL.
+// Trace runs an ICMP-echo traceroute toward host (mtr-style: routers answer
+// echo probes far more reliably than UDP). Two probes per TTL, then the hop
+// is marked unanswered. Hops are enriched with PTR + ASN before returning.
 func Trace(ctx context.Context, host string, maxHops int, hopTimeout time.Duration) ([]Hop, error) {
 	dst, err := resolve4(host)
 	if err != nil {
 		return nil, err
 	}
 
-	icmpConn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
+	conn, err := icmp.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
 		return nil, ErrNoPermission
 	}
-	defer icmpConn.Close()
+	defer conn.Close()
+	pc := conn.IPv4PacketConn()
 
-	udp, err := net.ListenPacket("udp4", ":0")
-	if err != nil {
-		return nil, err
-	}
-	defer udp.Close()
-	pc := ipv4.NewPacketConn(udp)
-
-	var hops []Hop
+	id := os.Getpid() & 0xffff
 	buf := make([]byte, 1500)
+	var hops []Hop
+
 	for ttl := 1; ttl <= maxHops; ttl++ {
 		if ctx.Err() != nil {
 			break
@@ -58,86 +61,117 @@ func Trace(ctx context.Context, host string, maxHops int, hopTimeout time.Durati
 		if err := pc.SetTTL(ttl); err != nil {
 			return nil, err
 		}
-		port := 33434 + ttl
-		if _, err := udp.WriteTo([]byte("intspeed-aspath"), &net.UDPAddr{IP: dst, Port: port}); err != nil {
-			return nil, err
-		}
 
 		hop := Hop{TTL: ttl}
 		reached := false
-		deadline := time.Now().Add(hopTimeout)
-		for time.Now().Before(deadline) {
-			icmpConn.SetReadDeadline(deadline)
-			n, peer, err := icmpConn.ReadFrom(buf)
-			if err != nil {
-				break // timeout: unanswered hop
+		for attempt := 0; attempt < 2 && hop.IP == ""; attempt++ {
+			seq := ttl<<2 | attempt
+			wm := icmp.Message{
+				Type: ipv4.ICMPTypeEcho,
+				Body: &icmp.Echo{ID: id, Seq: seq, Data: []byte("intspeed-aspath")},
 			}
-			kind, probeDst, probePort := parseICMP(buf[:n])
-			if probeDst == nil || !probeDst.Equal(dst) || probePort != port {
-				continue // someone else's ICMP; keep reading until deadline
+			wb, _ := wm.Marshal(nil)
+			start := time.Now()
+			if _, err := conn.WriteTo(wb, &net.IPAddr{IP: dst}); err != nil {
+				return nil, err
 			}
-			hop.IP = peer.String()
-			reached = kind == "unreach" || probeDst.Equal(net.ParseIP(peer.String()))
-			break
+
+			deadline := start.Add(hopTimeout)
+			for time.Now().Before(deadline) {
+				conn.SetReadDeadline(deadline)
+				n, peer, err := conn.ReadFrom(buf)
+				if err != nil {
+					break // timeout → next attempt
+				}
+				match, isReply := matchProbe(buf[:n], id, seq)
+				if !match {
+					continue
+				}
+				hop.IP = peer.String()
+				hop.RTTMs = float64(time.Since(start).Microseconds()) / 1000
+				reached = isReply && peer.String() == dst.String()
+				break
+			}
 		}
 		hops = append(hops, hop)
 		if reached {
 			break
 		}
 	}
+
+	enrich(ctx, hops)
 	return hops, nil
 }
 
-// parseICMP extracts the original probe's destination IP and UDP port from a
-// time-exceeded / dest-unreachable payload (IP header + first 8 bytes of UDP).
-func parseICMP(b []byte) (kind string, dst net.IP, port int) {
+// matchProbe reports whether an incoming ICMP packet answers our echo probe
+// (either an echo reply from the destination, or a time-exceeded /
+// dest-unreachable quoting our probe), and whether it was the final reply.
+func matchProbe(b []byte, id, seq int) (match, isReply bool) {
 	msg, err := icmp.ParseMessage(1, b)
 	if err != nil {
-		return "", nil, 0
+		return false, false
 	}
-	var data []byte
 	switch body := msg.Body.(type) {
+	case *icmp.Echo:
+		return msg.Type == ipv4.ICMPTypeEchoReply && body.ID == id && body.Seq == seq, true
 	case *icmp.TimeExceeded:
-		kind, data = "ttl", body.Data
+		return quotedEchoMatches(body.Data, id, seq), false
 	case *icmp.DstUnreach:
-		kind, data = "unreach", body.Data
-	default:
-		return "", nil, 0
+		return quotedEchoMatches(body.Data, id, seq), false
 	}
-	if len(data) < 28 { // 20B IP header + 8B UDP header
-		return "", nil, 0
-	}
-	ihl := int(data[0]&0x0f) * 4
-	if len(data) < ihl+8 {
-		return "", nil, 0
-	}
-	dst = net.IPv4(data[16], data[17], data[18], data[19])
-	port = int(data[ihl+2])<<8 | int(data[ihl+3])
-	return kind, dst, port
+	return false, false
 }
 
-// ASPath collapses hops into the AS-level path. Unanswered and unmapped hops
-// (private ranges, IXP fabrics) are skipped; consecutive same-AS hops merge.
-func ASPath(hops []Hop) []AS {
-	var path []AS
-	cache := map[string]string{}
-	for _, h := range hops {
-		if h.IP == "" {
+// quotedEchoMatches digs the original echo header out of an ICMP error
+// payload (IP header + first 8 bytes of the offending packet).
+func quotedEchoMatches(data []byte, id, seq int) bool {
+	if len(data) < 20 {
+		return false
+	}
+	ihl := int(data[0]&0x0f) * 4
+	if len(data) < ihl+8 || data[ihl] != 8 { // type 8 = echo request
+		return false
+	}
+	qid := int(data[ihl+4])<<8 | int(data[ihl+5])
+	qseq := int(data[ihl+6])<<8 | int(data[ihl+7])
+	return qid == id && qseq == seq
+}
+
+// enrich adds PTR names and ASN info to answered hops.
+func enrich(ctx context.Context, hops []Hop) {
+	nameCache := map[string]string{}
+	for i := range hops {
+		if hops[i].IP == "" {
 			continue
 		}
-		asn := lookupASN(h.IP)
+		hops[i].PTR = lookupPTR(ctx, hops[i].IP)
+		asn := lookupASN(hops[i].IP)
 		if asn == "" {
 			continue
 		}
-		if len(path) > 0 && path[len(path)-1].ASN == asn {
-			continue
-		}
-		name, ok := cache[asn]
+		hops[i].ASN = asn
+		name, ok := nameCache[asn]
 		if !ok {
 			name = lookupASName(asn)
-			cache[asn] = name
+			nameCache[asn] = name
 		}
-		path = append(path, AS{ASN: asn, Name: name})
+		hops[i].ASName = name
+	}
+}
+
+// ASPath collapses hops into the AS-level path: every AS traversed, in
+// order. Unanswered and unmapped hops (private ranges, IXP fabrics) are
+// skipped; consecutive same-AS hops merge.
+func ASPath(hops []Hop) []AS {
+	var path []AS
+	for _, h := range hops {
+		if h.ASN == "" {
+			continue
+		}
+		if len(path) > 0 && path[len(path)-1].ASN == h.ASN {
+			continue
+		}
+		path = append(path, AS{ASN: h.ASN, Name: h.ASName})
 	}
 	return path
 }
@@ -159,6 +193,16 @@ func resolve4(host string) (net.IP, error) {
 		}
 	}
 	return nil, fmt.Errorf("no IPv4 address for %s", host)
+}
+
+func lookupPTR(ctx context.Context, ip string) string {
+	ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer cancel()
+	names, err := net.DefaultResolver.LookupAddr(ctx, ip)
+	if err != nil || len(names) == 0 {
+		return ""
+	}
+	return strings.TrimSuffix(names[0], ".")
 }
 
 func lookupASN(ip string) string {
