@@ -12,7 +12,7 @@ on:
 
 env:
   CONTAINER_NAME: intspeed-web
-  CONTAINER_PORT: 55556
+  CONTAINER_PORT: 55570
   PROJECT_DIR: intspeed-web
 
 jobs:
