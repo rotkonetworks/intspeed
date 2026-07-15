@@ -92,9 +92,10 @@ jobs:
             NGINX_EOF
 
             tar xzf site.tar.gz
-            mkdir -p ${{ env.PROJECT_DIR }}
-            rm -rf ${{ env.PROJECT_DIR }}/*
-            mv web/* ${{ env.PROJECT_DIR }}/
+            # rm the dir itself, not a glob — zsh errors on unmatched globs
+            # when the target is empty (first deploy)
+            rm -rf ${{ env.PROJECT_DIR }}
+            mv web ${{ env.PROJECT_DIR }}
 
             podman stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
             podman rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
